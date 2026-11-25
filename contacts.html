@@ -1,0 +1,169 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Contacts — Deepfield</title>
+<meta name="description" content="Talk to a Deepfield survey engineer. Offices in Kyiv, Oslo and Antofagasta; we reply within one business day." />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@200;300;400&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="site.css" />
+<script type="importmap">
+{ "imports": {
+  "lenis": "https://cdn.jsdelivr.net/npm/lenis@1.1.13/dist/lenis.mjs",
+  "simplex-noise": "https://cdn.jsdelivr.net/npm/simplex-noise@4.0.3/+esm",
+  "d3-contour": "https://cdn.jsdelivr.net/npm/d3-contour@4.0.2/+esm",
+  "d3-geo": "https://cdn.jsdelivr.net/npm/d3-geo@3.1.1/+esm"
+} }
+</script>
+<style>
+.top { position: relative; padding-top: clamp(130px, 16vh, 190px); }
+.top__bg { position: absolute; inset: 0 0 auto 0; height: 100vh; pointer-events: none; opacity: .7; -webkit-mask-image: radial-gradient(70% 60% at 80% 30%, #000, transparent 75%); mask-image: radial-gradient(70% 60% at 80% 30%, #000, transparent 75%); }
+.top__bg canvas { width: 100%; height: 100%; }
+.top .wrap { position: relative; }
+.top h1 { max-width: 12em; margin: 24px 0 clamp(48px, 6vw, 90px); }
+.contact { display: grid; grid-template-columns: 7fr 4fr; gap: clamp(32px, 6vw, 110px); align-items: start; }
+.side { display: grid; gap: 34px; padding-top: 8px; }
+.side .mono { color: var(--dim); display: block; margin-bottom: 10px; }
+.side a.big { font-size: clamp(20px, 1.7vw, 26px); font-weight: 200; letter-spacing: -.02em; }
+.side p { color: var(--mut); font-size: 14px; }
+.resp { display: flex; align-items: center; gap: 14px; padding: 16px 18px; border-radius: 16px; border: 1px solid var(--line2); background: var(--glass); }
+.resp i { width: 8px; height: 8px; border-radius: 50%; background: #6fd08c; box-shadow: 0 0 12px #6fd08c; flex: none; }
+.resp b { font-weight: 400; color: var(--fg); }
+.ok h3 { font-size: clamp(28px, 2.6vw, 40px); font-weight: 200; letter-spacing: -.03em; margin: 18px 0 14px; }
+.ok p { color: var(--mut); max-width: 40ch; }
+.ok .tick { width: 54px; height: 54px; border-radius: 50%; border: 1px solid var(--acc); display: grid; place-items: center; color: var(--acc); }
+@media (max-width: 900px) { .contact { grid-template-columns: 1fr; } }
+
+/* offices on the map */
+.map { position: relative; margin-top: var(--sp-2); }
+.map canvas { width: 100%; aspect-ratio: 2.3 / 1; }
+.offices { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--gut); margin-top: -70px; position: relative; z-index: 1; }
+.ocard { padding: 24px; border-radius: 20px; background: var(--glass2); border: 1px solid var(--line2); backdrop-filter: blur(18px); -webkit-backdrop-filter: blur(18px); display: grid; gap: 6px; transition: border-color .4s, transform .5s var(--ease); }
+.ocard:hover { border-color: rgba(255,90,31,.5); transform: translateY(-4px); }
+.ocard .mono { color: var(--dim); }
+.ocard h3 { font-size: 22px; font-weight: 300; letter-spacing: -.02em; margin-top: 6px; }
+.ocard p { color: var(--mut); font-size: 14px; }
+.ocard .row { display: flex; justify-content: space-between; align-items: center; margin-top: 14px; padding-top: 14px; border-top: 1px solid var(--line); }
+.ocard .clk { font-size: 24px; font-weight: 200; letter-spacing: -.02em; font-variant-numeric: tabular-nums; }
+.ocard .st { display: inline-flex; gap: 8px; align-items: center; color: var(--mut); }
+.ocard .st i { width: 6px; height: 6px; border-radius: 50%; background: var(--dim); }
+.ocard .st.open i { background: #6fd08c; box-shadow: 0 0 10px #6fd08c; }
+@media (max-width: 900px) { .offices { grid-template-columns: 1fr; margin-top: 20px; } }
+
+/* legal */
+.legal { display: grid; grid-template-columns: repeat(4, 1fr); gap: var(--gut); padding: 30px 0; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); }
+.legal .mono { color: var(--dim); display: block; margin-bottom: 10px; }
+.legal p { font-size: 15px; }
+@media (max-width: 900px) { .legal { grid-template-columns: 1fr 1fr; } }
+</style>
+</head>
+<body>
+<main>
+  <section class="top">
+    <div class="top__bg"><canvas data-viz="contours" data-o='{"seed":11}'></canvas></div>
+    <div class="wrap">
+      <span class="kicker mono rv"><i></i>Contacts</span>
+      <h1 class="h1 split">Talk to a survey engineer,<br>not a sales script.</h1>
+
+      <div class="contact">
+        <div class="form-card rv" id="formCard">
+          <form class="form" id="form" novalidate>
+            <div class="fld"><label class="mono" for="n">Full name</label><input class="inp" id="n" name="name" autocomplete="name" required><span class="msg">Please add your name.</span></div>
+            <div class="fld"><label class="mono" for="e">Work email</label><input class="inp" id="e" name="email" type="email" autocomplete="email" required><span class="msg">Please use a valid email.</span></div>
+            <div class="fld"><label class="mono" for="c">Company</label><input class="inp" id="c" name="company" autocomplete="organization"></div>
+            <div class="fld"><label class="mono" for="t">Topic</label><select class="inp" id="t" name="topic"><option>A survey for my site</option><option>Partnership or research</option><option>Press</option><option>Careers</option><option>Something else</option></select></div>
+            <div class="fld full"><label class="mono" for="m">Message <small>optional</small></label><textarea class="inp" id="m" name="message" placeholder="Site location, target depth, timeline — whatever you know."></textarea></div>
+            <label class="chk full"><input type="checkbox" id="agree" required><span>I agree to the processing of my data under the <a href="#">Privacy Policy</a>.</span></label>
+            <div class="full"><button class="btn" type="submit"><span>Send message</span><i class="btn__ic"><svg viewBox="0 0 16 16"><path d="M4 12 12 4M6 4h6v6"/></svg></i></button></div>
+          </form>
+          <div class="ok" role="status" aria-live="polite">
+            <span class="tick">✓</span>
+            <h3>Message received.</h3>
+            <p>A survey engineer will reply to <b id="okMail">your email</b> within one business day. Usually it's sooner.</p>
+            <a class="link mono" href="simulator.html" style="margin-top:26px">Meanwhile, run a simulated survey ↗</a>
+          </div>
+        </div>
+
+        <aside class="side">
+          <div class="resp rv"><i></i><span class="mono" style="margin:0">Reply time today: <b>~3 h</b></span></div>
+          <div class="rv"><span class="mono">General</span><a class="big link" href="mailto:hello@deepfield.example" data-ph>hello@deepfield.example</a></div>
+          <div class="rv"><span class="mono">Phone</span><a class="big link" href="tel:+380000000000" data-ph>+380 00 000 0000</a><p style="margin-top:6px">Mon–Fri · 9:00–18:00 CET</p></div>
+          <div class="rv"><span class="mono">Direct lines</span>
+            <p><a class="link" href="mailto:surveys@deepfield.example">surveys@</a> · <a class="link" href="mailto:research@deepfield.example">research@</a> · <a class="link" href="mailto:press@deepfield.example">press@</a> · <a class="link" href="mailto:jobs@deepfield.example">jobs@</a></p></div>
+          <div class="rv"><span class="mono">Not ready to talk?</span><a class="link" href="simulator.html">Place a virtual array anywhere on the planet ↗</a></div>
+        </aside>
+      </div>
+    </div>
+  </section>
+
+  <section class="map">
+    <div class="wrap">
+      <div class="shead">
+        <span class="shead__idx mono">Offices</span>
+        <h2 class="shead__t h2 split">Three bases,<br>one crew.</h2>
+        <p class="shead__p body rv">Visits by appointment. Field bases move with the surveys.</p>
+      </div>
+      <canvas id="offMap" class="rv" data-viz="dotmap" data-o='{"pins":[{"lat":50.45,"lon":30.52,"label":"Kyiv · HQ","sub":"engineering"},{"lat":59.91,"lon":10.75,"label":"Oslo","sub":"research · offshore"},{"lat":-23.65,"lon":-70.4,"label":"Antofagasta","sub":"field base"}]}' aria-label="World map with three Deepfield offices"></canvas>
+      <div class="offices">
+        <article class="ocard rv" data-i="0"><span class="mono">Headquarters · engineering</span><h3 data-ph>Kyiv, Ukraine</h3><p data-ph>Street 00, building 0, 01001</p><div class="row"><span class="clk" data-tz="Europe/Kyiv">--:--</span><span class="st mono"><i></i><span></span></span></div><a class="link mono" href="#" style="margin-top:10px">Open in maps ↗</a></article>
+        <article class="ocard rv" data-i="1" data-d="1"><span class="mono">Research · offshore</span><h3 data-ph>Oslo, Norway</h3><p data-ph>Gate 00, 0150 Oslo</p><div class="row"><span class="clk" data-tz="Europe/Oslo">--:--</span><span class="st mono"><i></i><span></span></span></div><a class="link mono" href="#" style="margin-top:10px">Open in maps ↗</a></article>
+        <article class="ocard rv" data-i="2" data-d="2"><span class="mono">Field base · Americas</span><h3 data-ph>Antofagasta, Chile</h3><p data-ph>Avenida 0000, 1240000</p><div class="row"><span class="clk" data-tz="America/Santiago">--:--</span><span class="st mono"><i></i><span></span></span></div><a class="link mono" href="#" style="margin-top:10px">Open in maps ↗</a></article>
+      </div>
+    </div>
+  </section>
+
+  <section class="sp2">
+    <div class="wrap">
+      <span class="kicker mono rv" style="margin-bottom:26px"><i></i>Company details</span>
+      <div class="legal rv">
+        <div><span class="mono">Legal entity</span><p data-ph>Deepfield Systems LLC</p></div>
+        <div><span class="mono">Registration no.</span><p data-ph>00000000</p></div>
+        <div><span class="mono">VAT</span><p data-ph>UA000000000000</p></div>
+        <div><span class="mono">Certifications</span><p data-ph>ISO 9001 · ISO 14001</p></div>
+      </div>
+      <div class="ctas rv" style="margin-top:30px"><a class="link mono" href="#">Download company profile · PDF ↗</a><a class="link mono" href="access.html">Get early access ↗</a></div>
+    </div>
+  </section>
+</main>
+<footer class="ftr"></footer>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+<script type="module">
+import { boot } from './site.js';
+boot();
+
+/* form: inline validation, then a confirmation state (prototype — nothing is sent) */
+const form = document.getElementById('form'), card = document.getElementById('formCard');
+const req = [['n', v => v.trim().length > 1], ['e', v => /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(v)]];
+const check = id => { const el = document.getElementById(id), ok = req.find(r => r[0] === id)[1](el.value); el.parentElement.classList.toggle('err', !ok); return ok; };
+req.forEach(([id]) => document.getElementById(id).addEventListener('blur', () => check(id)));
+form.addEventListener('submit', e => {
+  e.preventDefault();
+  const ok = req.map(([id]) => check(id)).every(Boolean);
+  const agree = document.getElementById('agree');
+  agree.closest('.chk').style.color = agree.checked ? '' : 'var(--acc)';
+  if (!ok || !agree.checked) { form.querySelector('.err .inp')?.focus(); return; }
+  const b = form.querySelector('button'); b.disabled = true; b.querySelector('span').textContent = 'Sending…';
+  setTimeout(() => { document.getElementById('okMail').textContent = document.getElementById('e').value; card.classList.add('is-sent'); }, 900);
+});
+
+/* office clocks + open/closed, cards light their pin */
+const cards = [...document.querySelectorAll('.ocard')], map = document.getElementById('offMap');
+const tick = () => cards.forEach(c => {
+  const clk = c.querySelector('.clk'), st = c.querySelector('.st');
+  try {
+    const f = new Intl.DateTimeFormat('en-GB', { hour: '2-digit', minute: '2-digit', weekday: 'short', timeZone: clk.dataset.tz }).formatToParts(new Date());
+    const h = +f.find(p => p.type === 'hour').value, m = f.find(p => p.type === 'minute').value, wd = f.find(p => p.type === 'weekday').value;
+    clk.textContent = `${String(h).padStart(2, '0')}:${m}`;
+    const open = h >= 9 && h < 18 && !['Sat', 'Sun'].includes(wd);
+    st.classList.toggle('open', open); st.lastElementChild.textContent = open ? 'Open now' : 'Closed';
+  } catch { }
+});
+tick(); setInterval(tick, 20000);
+cards.forEach(c => { c.addEventListener('mouseenter', () => map.__viz?.setActive?.(+c.dataset.i)); c.addEventListener('mouseleave', () => map.__viz?.setActive?.(-1)); });
+</script>
+</body>
+</html>

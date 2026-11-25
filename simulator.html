@@ -1,0 +1,279 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Survey Simulator — Deepfield</title>
+  <meta name="description" content="Place a Deepfield DF-7 array anywhere on Earth, run a simulated subsurface scan and review resources and geohazards." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Sora:wght@200;300;400;500&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="sim.css" />
+  <script type="importmap">
+    {
+      "imports": {
+        "three": "https://cdn.jsdelivr.net/npm/three@0.169.0/build/three.module.js",
+        "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.169.0/examples/jsm/"
+      }
+    }
+  </script>
+</head>
+<body>
+  <!-- top bar -->
+  <header class="bar">
+    <a class="logo" href="index.html" title="Back to deepfield.com">
+      <svg viewBox="0 0 28 28" width="24" height="24" aria-hidden="true">
+        <circle cx="14" cy="14" r="12.5" fill="none" stroke="currentColor" stroke-width="1" opacity=".35"/>
+        <circle cx="14" cy="14" r="8" fill="none" stroke="currentColor" stroke-width="1" opacity=".6"/>
+        <circle cx="14" cy="14" r="3.4" fill="none" stroke="currentColor" stroke-width="1"/>
+        <circle cx="14" cy="14" r="1.3" fill="#ff5a1f"/>
+      </svg>
+      <span>deepfield</span>
+      <em class="mono">Simulator</em>
+    </a>
+
+    <ol class="stepper" aria-label="Progress">
+      <li class="is-on" data-step="place"><i>1</i><span>Place array</span></li>
+      <li data-step="scan"><i>2</i><span>Scan</span></li>
+      <li data-step="results"><i>3</i><span>Review</span></li>
+    </ol>
+
+    <div class="bar__right">
+      <button class="btn btn--ghost" id="resetBtn" disabled title="Clear the site and start over (R)">
+        <svg viewBox="0 0 16 16"><path d="M3 8a5 5 0 1 0 1.5-3.6M3 2.5v2.8h2.8"/></svg><span>Reset</span>
+      </button>
+      <a class="btn btn--ghost" href="index.html"><span>Back to site</span></a>
+    </div>
+  </header>
+
+  <div class="app">
+    <!-- LEFT: deployment -->
+    <aside class="col col--left">
+      <section class="card" id="siteCard">
+        <header class="card__head"><h2>Deployment site</h2><span class="chip" id="siteChip">Not placed</span></header>
+
+        <div class="empty" id="siteEmpty">
+          <div class="empty__ic"><svg viewBox="0 0 24 24"><circle cx="12" cy="10" r="3"/><path d="M12 21s-7-6.2-7-11a7 7 0 1 1 14 0c0 4.8-7 11-7 11z"/></svg></div>
+          <p><b>Click anywhere on the globe</b> to place a DF‑7 array, or pick a known region below.</p>
+        </div>
+
+        <div class="site" id="siteBody" hidden>
+          <div class="coord">
+            <div><span class="lbl">Latitude</span><b id="sLat">—</b></div>
+            <div><span class="lbl">Longitude</span><b id="sLon">—</b></div>
+          </div>
+          <div class="metric">
+            <span class="lbl" id="sElevLbl">Elevation</span>
+            <b id="sElev">—</b>
+            <span class="src mono" id="sElevSrc"></span>
+          </div>
+          <ul class="rules" id="rules">
+            <li data-rule="alt"><i></i><span>Altitude ≤ 3,000 m</span><em></em></li>
+            <li data-rule="depth"><i></i><span>Water depth ≤ 2,000 m</span><em></em></li>
+          </ul>
+          <dl class="ctx">
+            <div><dt>Setting</dt><dd id="sSetting">—</dd></div>
+            <div><dt>Tectonic plate</dt><dd id="sPlate">—</dd></div>
+            <div><dt>Province</dt><dd id="sProv">—</dd></div>
+          </dl>
+        </div>
+      </section>
+
+      <section class="card">
+        <header class="card__head"><h2>Survey parameters</h2></header>
+        <div class="field">
+          <span class="lbl">Footprint radius</span>
+          <div class="seg" data-param="radius"><i class="seg__pill"></i><button data-v="5">5 km</button><button data-v="10" class="is-on">10 km</button><button data-v="20">20 km</button></div>
+        </div>
+        <div class="field">
+          <span class="lbl">Imaging depth</span>
+          <div class="seg" data-param="depth"><i class="seg__pill"></i><button data-v="2">2 km</button><button data-v="5" class="is-on">5 km</button><button data-v="8">8 km</button></div>
+        </div>
+        <div class="est mono">
+          <div><span>Geophones</span><b id="eNodes">—</b></div>
+          <div><span>Field time</span><b id="eTime">—</b></div>
+          <div><span>Mode</span><b id="eMode">—</b></div>
+        </div>
+      </section>
+
+      <div class="cta">
+        <button class="btn btn--primary" id="scanBtn" disabled>
+          <span>Start scan</span><i class="btn__ic"><svg viewBox="0 0 16 16"><path d="M5 3.5v9l7-4.5z"/></svg></i>
+        </button>
+        <p class="cta__hint" id="scanHint">Place the array on a valid site first.</p>
+      </div>
+
+      <section class="card card--flat">
+        <header class="card__head"><h2>Quick picks</h2></header>
+        <div class="presets" id="presets"></div>
+      </section>
+    </aside>
+
+    <!-- CENTER: viewport -->
+    <section class="view" id="view">
+      <canvas id="gl"></canvas>
+
+      <div class="view__top">
+        <div class="pill-hint" id="viewHint"><i class="dot"></i><span>Click anywhere on Earth to place the DF‑7 array</span></div>
+      </div>
+
+      <div class="tip" id="tip" hidden>
+        <div class="tip__row mono"><span id="tLat"></span><span id="tLon"></span></div>
+        <div class="tip__elev" id="tElev"></div>
+        <div class="tip__ok" id="tOk"></div>
+      </div>
+
+      <div class="legend" id="legend" hidden></div>
+
+      <div class="view__tools">
+        <button class="tool" id="tDeploy" aria-pressed="true" title="Show deployable areas"><svg viewBox="0 0 16 16"><path d="M2 8a6 6 0 1 0 12 0A6 6 0 0 0 2 8zM5.5 8.2l1.8 1.8 3.4-3.6"/></svg><span>Deployable zones</span></button>
+        <button class="tool tool--icon" id="tSpin" aria-pressed="true" title="Auto‑rotate"><svg viewBox="0 0 16 16"><path d="M13 8a5 5 0 1 1-1.5-3.6M13 2.5v2.8h-2.8"/></svg></button>
+        <button class="tool tool--icon" id="tHome" title="Reset view"><svg viewBox="0 0 16 16"><circle cx="8" cy="8" r="5.5"/><path d="M8 1v3M8 12v3M1 8h3M12 8h3"/></svg></button>
+        <button class="tool tool--icon" id="tGlobe" title="Back to globe" hidden><svg viewBox="0 0 16 16"><circle cx="8" cy="8" r="6"/><path d="M2 8h12M8 2c2 2 2 10 0 12M8 2c-2 2-2 10 0 12"/></svg></button>
+      </div>
+
+      <!-- scan overlay -->
+      <div class="scan" id="scanUI" hidden>
+        <div class="scan__ring">
+          <svg viewBox="0 0 64 64"><circle cx="32" cy="32" r="28" class="trk"/><circle cx="32" cy="32" r="28" class="bar" id="scanArc"/></svg>
+          <b id="scanPct">0%</b>
+        </div>
+        <ol class="scan__stages" id="scanStages">
+          <li>Deploy array</li><li>Emit pulses</li><li>Record echoes</li><li>Waveform inversion</li><li>Classify anomalies</li>
+        </ol>
+        <button class="link mono" id="skipBtn">Skip animation</button>
+      </div>
+
+      <!-- deposit specimen inspector -->
+      <aside class="spec" id="spec" hidden>
+        <button class="spec__x" id="specClose" aria-label="Close specimen (Esc)"><svg viewBox="0 0 16 16"><path d="M4 4l8 8M12 4l-8 8"/></svg></button>
+        <div class="spec__top"><span class="spec__sym" id="spSym"></span><div><h3 id="spName"></h3><p id="spType"></p></div></div>
+        <div class="spec__val"><span class="lbl">In‑situ value</span><b id="spValue"></b></div>
+        <div class="spec__meters">
+          <div><span class="lbl">Tonnage</span><em id="spSize"></em><i><b id="spTon"></b></i></div>
+          <div><span class="lbl">Grade</span><em id="spGrade"></em><i><b id="spGr"></b></i></div>
+        </div>
+        <dl class="spec__grid" id="spStats"></dl>
+        <p class="spec__hint mono">Drag to orbit · Esc to close</p>
+      </aside>
+
+      <div class="fade" id="fade"></div>
+      <div class="dlabels" id="dlabels"></div>
+
+      <div class="boot" id="boot"><div class="boot__ring"></div><span class="mono" id="bootTxt">Loading Earth data…</span></div>
+    </section>
+
+    <!-- RIGHT: analysis -->
+    <aside class="col col--right">
+      <div class="tabs" role="tablist">
+        <button role="tab" class="is-on" data-tab="res" aria-selected="true">Resources</button>
+        <button role="tab" data-tab="haz" aria-selected="false">Geohazards</button>
+        <i class="tabs__pill"></i>
+      </div>
+
+      <!-- RESOURCES -->
+      <div class="panel" id="panelRes" role="tabpanel">
+        <div class="empty empty--panel" id="resEmpty">
+          <div class="empty__ic"><svg viewBox="0 0 24 24"><path d="M4 18l4-6 4 3 5-8 3 4"/><path d="M4 21h16"/></svg></div>
+          <p>Resource forecast appears once a site is placed. Run a scan to see what the array finds.</p>
+        </div>
+
+        <section class="card" id="priorCard" hidden>
+          <header class="card__head"><h2>Prospectivity forecast</h2><span class="chip chip--mute">Before scan</span></header>
+          <p class="sub" id="priorProv"></p>
+          <ul class="bars" id="priorBars"></ul>
+          <p class="foot mono">Model: distance to known metallogenic provinces + tectonic setting</p>
+        </section>
+
+        <section id="resLive" hidden>
+          <div class="card">
+            <header class="card__head"><h2>Scan in progress</h2><span class="chip chip--live"><i></i>Live</span></header>
+            <div class="kpis kpis--3">
+              <div><span class="lbl">Wavefront</span><b id="lvDepth">0 m</b></div>
+              <div><span class="lbl">Reflectors</span><b id="lvRefl">0</b></div>
+              <div><span class="lbl">Points</span><b id="lvPts">0</b></div>
+            </div>
+            <canvas class="trace" id="trace"></canvas>
+          </div>
+        </section>
+
+        <section id="resOut" hidden>
+          <div class="kpis kpis--2">
+            <div class="kpi kpi--big"><span class="lbl">Est. in‑situ value</span><b id="kValue">—</b><em id="kValueSub"></em></div>
+            <div class="kpi"><span class="lbl">Deposits</span><b id="kCount">—</b><em id="kCountSub"></em></div>
+            <div class="kpi"><span class="lbl">Shallowest</span><b id="kShallow">—</b><em>top of ore body</em></div>
+            <div class="kpi"><span class="lbl">Avg. confidence</span><b id="kConf">—</b><em>inversion fit</em></div>
+          </div>
+
+          <section class="card">
+            <header class="card__head"><h2>Depth profile</h2><span class="chip chip--mute" id="profMax"></span></header>
+            <svg class="profile" id="profile" viewBox="0 0 320 150" preserveAspectRatio="none"></svg>
+          </section>
+
+          <div id="depCards"></div>
+
+          <div class="empty empty--panel" id="noFind" hidden>
+            <div class="empty__ic"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="6"/><path d="M20 20l-4.5-4.5M8.5 11h5"/></svg></div>
+            <p><b>No economic mineralisation detected.</b> <span id="noFindTxt"></span></p>
+            <div class="presets presets--inline" id="noFindPicks"></div>
+          </div>
+          <p class="foot mono" id="priceNote"></p>
+        </section>
+      </div>
+
+      <!-- GEOHAZARDS -->
+      <div class="panel" id="panelHaz" role="tabpanel" hidden>
+        <section class="card">
+          <header class="card__head"><h2>Map style</h2></header>
+          <div class="seg seg--3" id="styleSeg"><i class="seg__pill"></i>
+            <button data-v="seismic" class="is-on">Seismic heat</button>
+            <button data-v="plates">Plate boundaries</button>
+            <button data-v="volc">Volcanoes</button>
+          </div>
+          <p class="sub" id="styleDesc"></p>
+        </section>
+
+        <div class="empty empty--panel" id="hazEmpty">
+          <div class="empty__ic"><svg viewBox="0 0 24 24"><path d="M12 3l9 16H3z"/><path d="M12 10v4M12 17v.5"/></svg></div>
+          <p>Explore the global layers above, then place a site to get a local risk assessment.</p>
+        </div>
+
+        <div id="hazBody" hidden>
+          <section class="card risk">
+            <div class="gauge">
+              <svg viewBox="0 0 120 120"><circle cx="60" cy="60" r="50" class="trk"/><circle cx="60" cy="60" r="50" class="bar" id="riskArc"/></svg>
+              <div><b id="riskVal">0</b><span class="mono">/ 100</span></div>
+            </div>
+            <div class="risk__txt">
+              <span class="lbl">Natural hazard index</span>
+              <h3 id="riskLvl">—</h3>
+              <p id="riskSum"></p>
+            </div>
+          </section>
+
+          <section class="card">
+            <ul class="subscores" id="subscores">
+              <li data-style="seismic"><span>Seismic</span><i><b></b></i><em></em></li>
+              <li data-style="plates"><span>Tectonic</span><i><b></b></i><em></em></li>
+              <li data-style="volc"><span>Volcanic</span><i><b></b></i><em></em></li>
+            </ul>
+          </section>
+
+          <section class="card" id="styleCard"></section>
+
+          <section class="card">
+            <header class="card__head"><h2>Engineering notes</h2></header>
+            <ul class="notes" id="notes"></ul>
+          </section>
+        </div>
+        <p class="foot mono">Data: USGS ComCat (M5.5+, 1980–2026) · Bird 2003 PB2002 plates · Smithsonian GVP Volcanoes of the World · ETOPO1 / GEBCO 2020</p>
+      </div>
+    </aside>
+  </div>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+  <script type="module" src="sim.js"></script>
+</body>
+</html>

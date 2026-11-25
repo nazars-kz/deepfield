@@ -1,0 +1,272 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Get early access — Deepfield</title>
+<meta name="description" content="Join the DF‑7 early‑access waitlist. Cohort 3 has 40 survey slots, reviewed every two weeks." />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@200;300;400&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="site.css" />
+<script type="importmap">
+{ "imports": {
+  "lenis": "https://cdn.jsdelivr.net/npm/lenis@1.1.13/dist/lenis.mjs",
+  "simplex-noise": "https://cdn.jsdelivr.net/npm/simplex-noise@4.0.3/+esm",
+  "d3-contour": "https://cdn.jsdelivr.net/npm/d3-contour@4.0.2/+esm",
+  "d3-geo": "https://cdn.jsdelivr.net/npm/d3-geo@3.1.1/+esm"
+} }
+</script>
+<style>
+.top { position: relative; padding-top: clamp(130px, 16vh, 180px); overflow: hidden; }
+.top__bg { position: absolute; inset: 0; pointer-events: none; opacity: .5; }
+.top__bg canvas { width: 100%; height: 100%; }
+.top .wrap { position: relative; }
+.join { display: grid; grid-template-columns: 6fr 5fr; gap: clamp(32px, 6vw, 110px); align-items: start; }
+.join h1 { margin: 24px 0 26px; font-size: clamp(42px, 5.2vw, 80px); }
+.join .lead { margin-bottom: 44px; }
+
+.cohort { padding: 24px; border-radius: 22px; border: 1px solid var(--line2); background: var(--glass); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); }
+.cohort__h { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; margin-bottom: 18px; }
+.cohort__h b { font-size: 34px; font-weight: 200; letter-spacing: -.03em; }
+.cohort__h b small { font-size: 15px; color: var(--mut); }
+.slots { display: grid; grid-template-columns: repeat(20, 1fr); gap: 7px; }
+.slots i { aspect-ratio: 1; border-radius: 50%; border: 1px solid var(--line2); transition: background .5s, border-color .5s, transform .5s var(--ease); }
+.slots i.t { background: var(--fg); border-color: var(--fg); opacity: .75; }
+.slots i.you { border-color: var(--acc); box-shadow: 0 0 12px rgba(255,90,31,.6); animation: you 1.6s infinite; }
+.slots i.you.t { background: var(--acc); opacity: 1; animation: none; }
+@keyframes you { 50% { transform: scale(1.25); } }
+.cohort__f { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 10px; margin-top: 18px; color: var(--dim); }
+.cohort__f b { color: var(--fg); font-weight: 400; }
+.perks { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--gut); margin-top: 34px; }
+.perks div { border-top: 1px solid var(--line2); padding-top: 14px; }
+.perks .mono { color: var(--dim); display: block; margin-bottom: 8px; }
+.perks b { font-weight: 300; font-size: 15px; }
+
+.form-card h2 { font-size: 26px; font-weight: 200; letter-spacing: -.03em; }
+.form-card .sub { color: var(--mut); font-size: 14px; margin: 6px 0 26px; display: flex; justify-content: space-between; gap: 12px; }
+.form-card .micro { color: var(--dim); font-size: 12.5px; text-align: center; margin-top: 12px; }
+.fld .aux { position: absolute; right: 0; top: 0; color: var(--acc); }
+.ok .pos { display: flex; align-items: baseline; gap: 14px; margin: 26px 0; padding: 22px 0; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); }
+.ok .pos b { font-size: 72px; font-weight: 200; letter-spacing: -.05em; line-height: .9; }
+.ok h3 { font-size: 30px; font-weight: 200; letter-spacing: -.03em; margin-top: 14px; }
+.ok p { color: var(--mut); }
+.ok ol { list-style: none; display: grid; gap: 12px; margin: 22px 0 28px; }
+.ok li { display: grid; grid-template-columns: 90px 1fr; gap: 10px; font-size: 14px; color: var(--mut); }
+.ok li .mono { color: var(--acc); }
+@media (max-width: 1000px) { .join { grid-template-columns: 1fr; } }
+@media (max-width: 600px) { .slots { grid-template-columns: repeat(10, 1fr); } .perks { grid-template-columns: 1fr; } }
+
+/* term sheet */
+.terms { border-top: 1px solid var(--line); }
+.term { display: grid; grid-template-columns: 70px 4fr 5fr 3fr; gap: var(--gut); align-items: baseline; padding: 34px 0; border-bottom: 1px solid var(--line); }
+.term .mono { color: var(--dim); }
+.term h3 { font-size: clamp(20px, 1.8vw, 28px); font-weight: 200; letter-spacing: -.03em; }
+.term p { color: var(--mut); font-size: 14.5px; max-width: 40ch; }
+.term b { justify-self: end; font-size: clamp(30px, 3vw, 48px); font-weight: 200; letter-spacing: -.04em; line-height: 1; }
+.term b small { font-size: 13px; color: var(--mut); letter-spacing: 0; margin-left: 6px; }
+@media (max-width: 900px) { .term { grid-template-columns: 40px 1fr; } .term p, .term b { grid-column: 2; justify-self: start; } }
+
+/* after you apply — a line you travel */
+.path { position: relative; margin-top: 30px; }
+.path__line { position: absolute; left: 0; right: 0; top: 7px; height: 1px; background: var(--line2); }
+.path__fill { position: absolute; left: 0; top: 7px; height: 1px; width: 0; background: var(--acc); box-shadow: 0 0 10px var(--acc); }
+.path__dot { position: absolute; top: 1px; left: 0; width: 13px; height: 13px; border-radius: 50%; background: var(--acc); box-shadow: 0 0 18px var(--acc); transform: translateX(-50%); }
+.stations { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--gut); position: relative; }
+.station { padding-top: 40px; position: relative; opacity: .35; transition: opacity .6s; }
+.station.on { opacity: 1; }
+.station::before { content: ''; position: absolute; left: 0; top: 1px; width: 13px; height: 13px; border-radius: 50%; border: 1px solid var(--line2); background: var(--bg); }
+.station.on::before { border-color: var(--acc); }
+.station .mono.d { color: var(--acc); }
+.station h3 { font-size: clamp(22px, 2vw, 30px); font-weight: 200; letter-spacing: -.03em; margin: 12px 0 10px; }
+.station p { color: var(--mut); font-size: 14.5px; max-width: 34ch; }
+.station .chk2 { display: grid; gap: 8px; margin-top: 20px; }
+.station .chk2 span { display: flex; gap: 10px; align-items: center; color: var(--mut); }
+.station .chk2 span::before { content: '✓'; width: 18px; height: 18px; border-radius: 50%; border: 1px solid var(--line2); display: grid; place-items: center; font-size: 10px; color: var(--acc); }
+@media (max-width: 900px) { .stations { grid-template-columns: 1fr; gap: 10px; } .path__line, .path__fill, .path__dot { display: none; } .station { opacity: 1; } }
+
+/* voice */
+.voice { display: grid; grid-template-columns: 4fr 8fr; gap: clamp(32px, 6vw, 110px); align-items: center; }
+.voice .person__img { aspect-ratio: 4 / 5; border-radius: var(--r); overflow: hidden; border: 1px solid var(--line2); position: relative; }
+.voice canvas { width: 100%; height: 100%; }
+.voice blockquote { font-size: clamp(28px, 3vw, 46px); font-weight: 200; line-height: 1.15; letter-spacing: -.03em; }
+.voice blockquote em { font-style: normal; color: var(--acc); }
+.voice .who { margin-top: 28px; display: flex; gap: 18px; align-items: center; color: var(--dim); }
+.voice .who b { color: var(--fg); font-weight: 400; display: block; font-family: var(--sans); text-transform: none; letter-spacing: 0; font-size: 15px; }
+.voice .nums { display: flex; gap: 46px; margin-top: 40px; padding-top: 24px; border-top: 1px solid var(--line); }
+.voice .nums b { font-size: 40px; font-weight: 200; letter-spacing: -.04em; display: block; }
+.voice .nums span { color: var(--mut); font-size: 13px; }
+@media (max-width: 900px) { .voice { grid-template-columns: 1fr; } .voice .person__img { max-width: 260px; } }
+</style>
+</head>
+<body>
+<main>
+  <section class="top" id="apply">
+    <div class="top__bg"><canvas data-viz="rings"></canvas></div>
+    <div class="wrap join">
+      <div>
+        <span class="kicker mono rv"><i></i>Early access <b>/</b> cohort 3</span>
+        <h1 class="h1 split">Get your site surveyed<br>in the next cohort.</h1>
+        <p class="lead rv" data-d="2">Early‑access partners get a full DF‑7 survey at cost, direct access to our geophysicists and a say in what we build next.</p>
+
+        <div class="cohort rv" data-d="3">
+          <div class="cohort__h"><span class="mono dim">Cohort 3 · Q2 2027</span><b><span id="taken" data-ph>27</span><small> / 40 slots taken</small></b></div>
+          <div class="slots" id="slots" aria-hidden="true"></div>
+          <div class="cohort__f mono"><span>Next review <b data-ph>8 Dec</b></span><span>Reviewed every <b>2 weeks</b></span></div>
+        </div>
+        <div class="perks rv" data-d="4">
+          <div><span class="mono">Price</span><b>Survey at cost</b></div>
+          <div><span class="mono">Crew</span><b>Founding field team</b></div>
+          <div><span class="mono">Reply</span><b>Within 2 business days</b></div>
+        </div>
+      </div>
+
+      <div class="form-card rv" data-d="2" id="formCard">
+        <form class="form" id="form" novalidate>
+          <div class="full"><h2>Join the waitlist</h2><div class="sub"><span>Six fields. About three minutes.</span><span class="mono" id="prog">0 / 6</span></div></div>
+          <div class="fld"><label class="mono" for="n">Full name</label><input class="inp" id="n" autocomplete="name" required><span class="msg">Please add your name.</span></div>
+          <div class="fld"><label class="mono" for="e">Work email</label><input class="inp" id="e" type="email" autocomplete="email" required><span class="msg">Please use a valid work email.</span></div>
+          <div class="fld"><label class="mono" for="c">Company</label><input class="inp" id="c" autocomplete="organization" required><span class="msg">Which company is this for?</span></div>
+          <div class="fld"><label class="mono" for="r">Your role</label><select class="inp" id="r"><option>Exploration geologist</option><option>Project or asset manager</option><option>Engineer</option><option>Executive</option><option>Investor</option><option>Other</option></select></div>
+          <div class="fld full"><span class="lbl mono">Sector</span><div class="seg" role="radiogroup" aria-label="Sector">
+            <input type="radio" name="sec" id="s1" checked><label for="s1">Mining</label>
+            <input type="radio" name="sec" id="s2"><label for="s2">Geothermal</label>
+            <input type="radio" name="sec" id="s3"><label for="s3">Carbon storage</label>
+            <input type="radio" name="sec" id="s4"><label for="s4">Infrastructure</label>
+            <input type="radio" name="sec" id="s5"><label for="s5">Other</label></div></div>
+          <div class="fld full"><label class="mono" for="l">Site location <small>optional · country or coordinates</small></label><a class="aux mono link" href="simulator.html">Pick on globe ↗</a><input class="inp" id="l" placeholder="e.g. Antofagasta, Chile  or  −23.65, −70.40"></div>
+          <div class="fld full"><span class="lbl mono">When do you need results?</span><div class="seg" role="radiogroup" aria-label="Timeline">
+            <input type="radio" name="when" id="w1"><label for="w1">Within 6 months</label>
+            <input type="radio" name="when" id="w2" checked><label for="w2">6–12 months</label>
+            <input type="radio" name="when" id="w3"><label for="w3">Just exploring</label></div></div>
+          <label class="chk full"><input type="checkbox"><span>Send me field‑trial results, about once a month.</span></label>
+          <div class="full">
+            <button class="btn" type="submit"><span>Join the waitlist</span><i class="btn__ic"><svg viewBox="0 0 16 16"><path d="M4 12 12 4M6 4h6v6"/></svg></i></button>
+            <p class="micro">No commitment. You'll hear back by email within 2 business days.</p>
+          </div>
+        </form>
+        <div class="ok" role="status" aria-live="polite">
+          <span class="kicker mono"><i></i>Application received</span>
+          <h3>You're on the list.</h3>
+          <div class="pos"><b>#<span id="posN">28</span></b><span class="mono dim">your place in<br>cohort 3</span></div>
+          <p>We've sent a confirmation to <b id="okMail" style="color:var(--fg);font-weight:400">your email</b>. Here's what happens next:</p>
+          <ol>
+            <li><span class="mono">≤ 2 days</span>A quick check of depth, terrain and water</li>
+            <li><span class="mono">≤ 2 weeks</span>A 30‑minute technical call</li>
+            <li><span class="mono">≤ 4 weeks</span>A slot, a plan and a fixed price</li>
+          </ol>
+          <a class="link mono" href="simulator.html">Meanwhile, run a simulated survey ↗</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- WHAT'S INCLUDED -->
+  <section class="sp2" id="included">
+    <div class="wrap">
+      <div class="shead">
+        <span class="shead__idx mono">What's included</span>
+        <h2 class="shead__t h2 split">A full survey,<br>without the full price.</h2>
+        <p class="shead__p body rv">Early access is a working partnership, not a beta. You get a production survey and we get your feedback.</p>
+      </div>
+      <div class="terms">
+        <div class="term rv"><span class="mono">01</span><h3>Survey at cost</h3><p>You pay for crew and logistics only. The quote is fixed before we mobilise.</p><b data-ph>≈40%<small>of list</small></b></div>
+        <div class="term rv"><span class="mono">02</span><h3>Founding‑team crew</h3><p>Fieldwork and interpretation by the people who built the array.</p><b>4<small>people on site</small></b></div>
+        <div class="term rv"><span class="mono">03</span><h3>Priority slot</h3><p>Your dates are fixed before general availability opens.</p><b data-ph>Q2<small>2027</small></b></div>
+        <div class="term rv"><span class="mono">04</span><h3>Roadmap input</h3><p>A call every quarter where partners vote on the next features.</p><b>4×<small>per year</small></b></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- AFTER YOU APPLY -->
+  <section class="sp2" id="after">
+    <div class="wrap">
+      <div class="shead">
+        <span class="shead__idx mono">After you apply</span>
+        <h2 class="shead__t h2 split">Four weeks<br>from form to slot.</h2>
+        <p class="shead__p body rv">We pick sites where DF‑7 can give a clear answer. If yours isn't a fit yet, we'll tell you why.</p>
+      </div>
+      <div class="path" id="path">
+        <i class="path__line"></i><i class="path__fill" id="pfill"></i><i class="path__dot" id="pdot"></i>
+        <div class="stations">
+          <div class="station"><span class="mono d">Within 2 days</span><h3>Quick check</h3><p>We test your site against the array's limits.</p><div class="chk2 mono"><span>Depth ≤ 5 km</span><span>Water ≤ 2 km · land ≤ 3 km</span><span>Access by road</span></div></div>
+          <div class="station"><span class="mono d">Within 2 weeks</span><h3>Technical call</h3><p>30 minutes with a geophysicist to agree on the target and the depth.</p><div class="chk2 mono"><span>Target defined</span><span>Existing data reviewed</span></div></div>
+          <div class="station"><span class="mono d">Within 4 weeks</span><h3>Slot and plan</h3><p>Fixed dates, a fixed price and a survey plan you can take to your board.</p><div class="chk2 mono"><span>Dates locked</span><span>Price fixed</span></div></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- PARTNER VOICE -->
+  <section class="sp2">
+    <div class="wrap voice">
+      <div class="person__img rv"><canvas data-viz="portrait" data-o='{"seed":33,"code":"Cohort 1 partner"}'></canvas></div>
+      <div>
+        <span class="kicker mono rv"><i></i>From cohort 1</span>
+        <blockquote class="rv" style="margin-top:24px">“We had budgeted twelve holes. The model told us to drill three. <em>Two of them hit.</em>”</blockquote>
+        <div class="who mono rv"><span><b data-ph>Full name</b>Exploration manager · [mining company]</span></div>
+        <div class="nums rv"><div><b data-ph>3</b><span>holes drilled, not 12</span></div><div><b data-ph>2</b><span>intercepts</span></div><div><b data-ph>5 mo</b><span>saved on the programme</span></div></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FAQ -->
+  <section class="sp2" id="faq">
+    <div class="wrap faq">
+      <div class="faq__l">
+        <span class="kicker mono rv"><i></i>Before you apply</span>
+        <h2 class="h2 split">Waitlist<br>questions.</h2>
+        <a class="btn btn--glass rv" href="#apply" style="margin-top:12px"><span>Back to the form</span><i class="btn__ic"><svg viewBox="0 0 16 16"><path d="M12 12 4 4M10 4H4v6"/></svg></i></a>
+      </div>
+      <div class="acc rv">
+        <details open><summary><span class="mono">01</span>Does joining the waitlist commit me to anything?<i class="pm"></i></summary><p class="a">No. You only sign a contract after the technical call, once you've seen the survey plan and the fixed price.</p></details>
+        <details><summary><span class="mono">02</span>How much does an early‑access survey cost?<i class="pm"></i></summary><p class="a">Crew and logistics at cost, typically <span data-ph>$150–400k</span> depending on area, depth and terrain. The quote is fixed before mobilisation.</p></details>
+        <details><summary><span class="mono">03</span>Which countries can you survey in?<i class="pm"></i></summary><p class="a">Any country where we can get land access and ship equipment. Offshore we can work in up to 2 km of water, and on land up to 3 km of altitude.</p></details>
+        <details><summary><span class="mono">04</span>What if my site isn't selected?<i class="pm"></i></summary><p class="a">We tell you why and keep you first in line for general availability. Often it's only a timing issue.</p></details>
+        <details><summary><span class="mono">05</span>Who owns the results?<i class="pm"></i></summary><p class="a">You do. We publish anonymised validation figures only with your written consent.</p></details>
+      </div>
+    </div>
+  </section>
+</main>
+<footer class="ftr"></footer>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+<script type="module">
+import { boot } from './site.js';
+const { ScrollTrigger } = boot();
+
+/* cohort slots */
+const TOTAL = 40, TAKEN = 27, slots = document.getElementById('slots');
+slots.innerHTML = Array.from({ length: TOTAL }, (_, i) => `<i class="${i < TAKEN ? 't' : ''}${i === TAKEN ? ' you' : ''}"></i>`).join('');
+
+/* form: progress counter, validation, success state (prototype — nothing is sent) */
+const form = document.getElementById('form'), card = document.getElementById('formCard'), prog = document.getElementById('prog');
+const req = { n: v => v.trim().length > 1, e: v => /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(v), c: v => v.trim().length > 1 };
+const check = id => { const el = document.getElementById(id), ok = req[id](el.value); el.parentElement.classList.toggle('err', !ok); return ok; };
+const count = () => { const done = Object.keys(req).filter(id => req[id](document.getElementById(id).value)).length + 2 + (document.getElementById('l').value.trim() ? 1 : 0); prog.textContent = `${Math.min(6, done)} / 6`; };
+form.addEventListener('input', count); count();
+Object.keys(req).forEach(id => document.getElementById(id).addEventListener('blur', () => check(id)));
+form.addEventListener('submit', e => {
+  e.preventDefault();
+  const ok = Object.keys(req).map(check).every(Boolean);
+  if (!ok) { form.querySelector('.err .inp')?.focus(); return; }
+  const b = form.querySelector('button'); b.disabled = true; b.querySelector('span').textContent = 'Joining…';
+  setTimeout(() => {
+    document.getElementById('okMail').textContent = document.getElementById('e').value;
+    card.classList.add('is-sent');
+    const you = slots.querySelector('.you'); you.classList.add('t');
+    document.getElementById('taken').textContent = TAKEN + 1;
+  }, 900);
+});
+
+/* path: dot travels as you read */
+const fill = document.getElementById('pfill'), dot = document.getElementById('pdot'), sts = [...document.querySelectorAll('.station')];
+ScrollTrigger.create({ trigger: '#path', start: 'top 75%', end: 'bottom 45%', onUpdate: st => {
+  const p = st.progress, x = p * 100;
+  fill.style.width = x + '%'; dot.style.left = x + '%';
+  sts.forEach((s, i) => s.classList.toggle('on', p >= i / 3 - .01));
+} });
+</script>
+</body>
+</html>

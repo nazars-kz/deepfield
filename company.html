@@ -1,0 +1,243 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Company — Deepfield</title>
+<meta name="description" content="Deepfield Systems: geophysicists and engineers building acoustic arrays that read the ground before anyone breaks it." />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@200;300;400&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="site.css" />
+<script type="importmap">
+{ "imports": {
+  "lenis": "https://cdn.jsdelivr.net/npm/lenis@1.1.13/dist/lenis.mjs",
+  "simplex-noise": "https://cdn.jsdelivr.net/npm/simplex-noise@4.0.3/+esm",
+  "d3-contour": "https://cdn.jsdelivr.net/npm/d3-contour@4.0.2/+esm",
+  "d3-geo": "https://cdn.jsdelivr.net/npm/d3-geo@3.1.1/+esm"
+} }
+</script>
+<style>
+.hero { min-height: 100svh; position: relative; overflow: hidden; display: flex; flex-direction: column; justify-content: flex-end; padding-bottom: clamp(28px, 4vw, 56px); }
+.hero__bg { position: absolute; inset: 0; -webkit-mask-image: radial-gradient(80% 70% at 70% 40%, #000 30%, transparent 80%); mask-image: radial-gradient(80% 70% at 70% 40%, #000 30%, transparent 80%); }
+.hero__bg canvas { width: 100%; height: 100%; }
+.hero > .wrap { position: relative; z-index: 2; width: 100%; }
+.hero__grid { display: grid; grid-template-columns: 8fr 3fr; gap: var(--gut); align-items: end; }
+.hero h1 { margin: 26px 0 28px; }
+.facts { display: grid; gap: 0; }
+.facts div { display: flex; justify-content: space-between; gap: 16px; padding: 14px 0; border-bottom: 1px solid var(--line); }
+.facts div:first-child { border-top: 1px solid var(--line); }
+.facts .mono { color: var(--dim); }
+.facts b { font-weight: 300; }
+@media (max-width: 900px) { .hero__grid { grid-template-columns: 1fr; } .facts { margin-top: 30px; } }
+
+.mani { padding-top: var(--sp-2); }
+.mani .bigsay { font-size: clamp(34px, 4.6vw, 76px); max-width: 15em; }
+
+/* core timeline */
+.core { display: grid; grid-template-columns: 4fr 8fr; gap: clamp(30px, 5vw, 90px); }
+.core__stick { position: sticky; top: 110px; height: calc(100vh - 160px); display: grid; grid-template-rows: auto 1fr; gap: 30px; }
+.core__stick canvas { width: 100%; height: 100%; }
+.core__depth { color: var(--acc); }
+.mil { display: grid; grid-template-columns: 120px 1fr; gap: var(--gut); padding: clamp(48px, 7vw, 110px) 0; border-top: 1px solid var(--line); }
+.mil:first-child { border-top: 0; padding-top: 0; }
+.mil .yr { font-size: clamp(34px, 3vw, 48px); font-weight: 200; letter-spacing: -.04em; line-height: 1; }
+.mil h3 { font-size: clamp(22px, 2vw, 30px); font-weight: 200; letter-spacing: -.03em; margin-bottom: 14px; }
+.mil p { color: var(--mut); max-width: 40ch; }
+.mil .win { margin-top: 28px; max-width: 560px; }
+.mil .win canvas { aspect-ratio: 16 / 8; }
+.mil .tags { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 20px; }
+@media (max-width: 900px) { .core { grid-template-columns: 1fr; } .core__stick { display: none; } .mil { grid-template-columns: 1fr; gap: 12px; } }
+
+.stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: var(--gut); }
+@media (max-width: 900px) { .stats { grid-template-columns: 1fr 1fr; } }
+
+/* team */
+.team { display: grid; grid-template-columns: repeat(4, 1fr); gap: var(--gut); }
+.person:nth-child(even) { margin-top: 70px; }
+.person__img { position: relative; aspect-ratio: 4 / 5; border-radius: var(--r-s); overflow: hidden; border: 1px solid var(--line2); }
+.person__img canvas { width: 100%; height: 100%; }
+.person__img .ph { position: absolute; right: 12px; top: 12px; color: var(--dim); }
+.person h3 { font-size: 19px; font-weight: 300; letter-spacing: -.01em; margin: 18px 0 4px; }
+.person .mono { color: var(--acc); }
+.person p { color: var(--mut); font-size: 13.5px; margin-top: 10px; max-width: 30ch; }
+@media (max-width: 900px) { .team { grid-template-columns: 1fr 1fr; } .person:nth-child(even) { margin-top: 40px; } }
+
+/* where */
+.where { display: grid; grid-template-columns: 4fr 8fr; gap: var(--gut); align-items: center; }
+.where canvas { width: 100%; aspect-ratio: 2 / 1; }
+.office { padding: 20px 0; border-top: 1px solid var(--line); display: grid; grid-template-columns: 1fr auto; gap: 4px 12px; }
+.office:last-child { border-bottom: 1px solid var(--line); }
+.office h3 { font-size: 18px; font-weight: 300; }
+.office .mono { color: var(--dim); grid-column: 1; }
+.office .clk { grid-row: 1 / span 2; grid-column: 2; align-self: center; color: var(--mut); font-variant-numeric: tabular-nums; }
+@media (max-width: 900px) { .where { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+<main>
+  <!-- HERO -->
+  <section class="hero">
+    <div class="hero__bg"><canvas data-viz="contours" data-o='{"seed":8,"a":2.4}'></canvas></div>
+    <div class="wrap hero__grid">
+      <div>
+        <span class="kicker mono rv"><i></i>Company <b>/</b> Deepfield Systems</span>
+        <h1 class="h1 split">Geophysicists<br>who got tired of<br>drilling blind.</h1>
+        <p class="lead rv" data-d="2">We spent a decade on exploration crews watching good money go into dry holes. In 2019 we started building the instrument we wished we'd had.</p>
+      </div>
+      <div class="facts rv" data-d="3">
+        <div><span class="mono">Founded</span><b data-ph>2019</b></div>
+        <div><span class="mono">Team</span><b data-ph>38 people</b></div>
+        <div><span class="mono">Patents</span><b data-ph>14 granted</b></div>
+        <div><span class="mono">Offices</span><b data-ph>Kyiv · Oslo · Antofagasta</b></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- MANIFESTO -->
+  <section class="mani">
+    <div class="wrap">
+      <span class="kicker mono rv"><i></i>Why we exist</span>
+      <p class="bigsay" id="say" style="margin-top:30px">The ground under every mine, well and tunnel already holds the answer. Our job is to <span class="hl">read it before anyone breaks it.</span></p>
+    </div>
+  </section>
+
+  <!-- STORY AS A CORE -->
+  <section class="sp2" id="story">
+    <div class="wrap core">
+      <div class="core__stick">
+        <div>
+          <span class="kicker mono"><i></i>Our story</span>
+          <h2 class="h2" style="margin:20px 0 10px">Seven years,<br>drilled down.</h2>
+          <span class="mono core__depth" id="coreYr">2019</span>
+        </div>
+        <canvas id="core" data-viz="corelog" data-o='{"marks":[{"at":0.04,"label":"2019"},{"at":0.24,"label":"2021"},{"at":0.46,"label":"2023"},{"at":0.68,"label":"2025"},{"at":0.9,"label":"2027"}]}'></canvas>
+      </div>
+      <div class="mils">
+        <article class="mil"><span class="yr" data-ph>2019</span><div><h3 class="rv">First inversion code</h3><p class="rv">Three founders and a borrowed seismograph prove the method on a known aquifer outside Kyiv.</p></div></article>
+        <article class="mil"><span class="yr" data-ph>2021</span><div><h3 class="rv">DF‑3 prototype</h3><p class="rv">27 sensors and 800 m of depth. The first paying survey was for a quarry operator who needed to know where the good stone ended.</p>
+          <div class="win rv"><div class="win__bar mono"><span class="dots"><i></i><i></i><i></i></span><span class="t">DF‑3 field record · 2021</span></div><canvas data-viz="gather" data-o='{"traces":27}'></canvas></div></div></article>
+        <article class="mil"><span class="yr" data-ph>2023</span><div><h3 class="rv">Blind validation</h3><p class="rv">212 sealed cores and a 91% lithology match. The seed round closed the month the results came back.</p>
+          <div class="win rv"><div class="win__bar mono"><span class="dots"><i></i><i></i><i></i></span><span class="t">Model vs sealed cores · line B‑3</span></div><canvas data-viz="cores"></canvas></div></div></article>
+        <article class="mil"><span class="yr" data-ph>2025</span><div><h3 class="rv">DF‑7 goes offshore</h3><p class="rv">81 sensors, 5 km of depth and seabed nodes. The first CO₂ storage screening ran in the North Sea.</p><div class="tags rv"><span class="chip mono"><i></i>5 km depth</span><span class="chip mono"><i></i>2 km water</span><span class="chip mono"><i></i>72 h to volume</span></div></div></article>
+        <article class="mil"><span class="yr" data-ph>2027</span><div><h3 class="rv">Early access, cohort 3</h3><p class="rv">40 commercial surveys and three new sectors. This is where you come in.</p><a class="btn rv" href="access.html" style="margin-top:26px"><span>Get early access</span><i class="btn__ic"><svg viewBox="0 0 16 16"><path d="M4 12 12 4M6 4h6v6"/></svg></i></a></div></article>
+      </div>
+    </div>
+  </section>
+
+  <!-- NUMBERS -->
+  <section class="sp2">
+    <div class="wrap stats">
+      <div class="stat rv"><span class="mono">People</span><b class="num"><span data-count="38" data-ph>38</span></b><p>engineers, geophysicists and field crew</p></div>
+      <div class="stat rv" data-d="1"><span class="mono">Patents</span><b class="num"><span data-count="14" data-ph>14</span></b><p>granted on sensors and inversion</p></div>
+      <div class="stat rv" data-d="2"><span class="mono">Raised</span><b class="num">$<span data-count="22" data-ph>22</span><small>M</small></b><p>from geoscience and climate investors</p></div>
+      <div class="stat rv" data-d="3"><span class="mono">Papers</span><b class="num"><span data-count="11" data-ph>11</span></b><p>peer‑reviewed since 2021</p></div>
+    </div>
+  </section>
+
+  <!-- TEAM -->
+  <section class="sp2" id="team">
+    <div class="wrap">
+      <div class="shead">
+        <span class="shead__idx mono">Leadership</span>
+        <h2 class="shead__t h2 split">People who have<br>stood on the rig.</h2>
+        <p class="shead__p body rv">Every early‑access survey is run by this team, in the field and in the inversion room.</p>
+      </div>
+      <div class="team">
+        <article class="person rv"><div class="person__img"><canvas data-viz="portrait" data-o='{"seed":3,"code":"CEO"}'></canvas><span class="ph mono">Photo</span></div><h3 data-ph>Full name</h3><span class="mono">Chief executive</span><p>12 years in mineral exploration across three continents.</p></article>
+        <article class="person rv" data-d="1"><div class="person__img"><canvas data-viz="portrait" data-o='{"seed":7,"code":"CTO"}'></canvas><span class="ph mono">Photo</span></div><h3 data-ph>Full name</h3><span class="mono">Chief technology</span><p>PhD in seismic inversion, author of 30+ papers.</p></article>
+        <article class="person rv" data-d="2"><div class="person__img"><canvas data-viz="portrait" data-o='{"seed":12,"code":"OPS"}'></canvas><span class="ph mono">Photo</span></div><h3 data-ph>Full name</h3><span class="mono">Field operations</span><p>Has run 140 surveys on five continents.</p></article>
+        <article class="person rv" data-d="3"><div class="person__img"><canvas data-viz="portrait" data-o='{"seed":21,"code":"GEO"}'></canvas><span class="ph mono">Photo</span></div><h3 data-ph>Full name</h3><span class="mono">Chief geologist</span><p>Licensed P.Geo with 18 years in copper systems.</p></article>
+      </div>
+    </div>
+  </section>
+
+  <!-- WHERE -->
+  <section class="sp2" id="where">
+    <div class="wrap where">
+      <div>
+        <span class="kicker mono rv"><i></i>Where we work</span>
+        <h2 class="h2 split" style="margin:22px 0 32px">Three bases.<br>Four continents.</h2>
+        <div class="office rv"><h3 data-ph>Kyiv, Ukraine</h3><span class="mono">HQ · engineering</span><span class="clk mono" data-tz="Europe/Kyiv">--:--</span></div>
+        <div class="office rv"><h3 data-ph>Oslo, Norway</h3><span class="mono">Research · offshore</span><span class="clk mono" data-tz="Europe/Oslo">--:--</span></div>
+        <div class="office rv"><h3 data-ph>Antofagasta, Chile</h3><span class="mono">Field base · Americas</span><span class="clk mono" data-tz="America/Santiago">--:--</span></div>
+      </div>
+      <canvas class="rv" data-viz="dotmap" data-o='{"labels":true,"pins":[{"lat":50.45,"lon":30.52,"label":"Kyiv"},{"lat":59.91,"lon":10.75,"label":"Oslo"},{"lat":-23.65,"lon":-70.4,"label":"Antofagasta"},{"lat":-21.6,"lon":118.6,"label":"Pilbara","nl":1},{"lat":64.1,"lon":-21.3,"label":"Hengill","nl":1},{"lat":56.4,"lon":3.2,"label":"North Sea","nl":1}]}' aria-label="World map with Deepfield offices and survey sites"></canvas>
+    </div>
+  </section>
+
+  <!-- BACKERS -->
+  <section class="sp2">
+    <div class="wrap"><span class="kicker mono rv"><i></i>Backed by and working with</span></div>
+    <div class="marq" style="margin-top:30px" aria-label="Investors and partners">
+      <div class="marq__t" data-ph>
+        <span>Northvale Capital</span><span>Meridian Climate Fund</span><span>Institute of Geophysics</span><span>Fjordline Energy</span><span>Atacama Copper Partners</span><span>EU Horizon programme</span>
+        <span>Northvale Capital</span><span>Meridian Climate Fund</span><span>Institute of Geophysics</span><span>Fjordline Energy</span><span>Atacama Copper Partners</span><span>EU Horizon programme</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- CAREERS -->
+  <section class="sp2" id="careers">
+    <div class="wrap">
+      <div class="shead">
+        <span class="shead__idx mono">Careers</span>
+        <h2 class="shead__t h2 split">Half the job<br>is outdoors.</h2>
+        <p class="shead__p body rv">We hire people who like seeing their work leave the building. Six roles are open now.</p>
+      </div>
+      <div class="rows">
+        <a class="rowl rv" href="#"><span class="mono">01</span><h3>Field geophysicist</h3><p>Run surveys from deployment to QC</p><span class="mono">Antofagasta · on site</span><span class="go"><svg viewBox="0 0 16 16"><path d="M4 12 12 4M6 4h6v6"/></svg></span></a>
+        <a class="rowl rv" href="#"><span class="mono">02</span><h3>Inversion scientist</h3><p>Full‑waveform inversion at scale</p><span class="mono">Oslo · hybrid</span><span class="go"><svg viewBox="0 0 16 16"><path d="M4 12 12 4M6 4h6v6"/></svg></span></a>
+        <a class="rowl rv" href="#"><span class="mono">03</span><h3>Embedded engineer</h3><p>Geophone firmware and GNSS timing</p><span class="mono">Kyiv · hybrid</span><span class="go"><svg viewBox="0 0 16 16"><path d="M4 12 12 4M6 4h6v6"/></svg></span></a>
+        <a class="rowl rv" href="#"><span class="mono">04</span><h3>3D viewer engineer</h3><p>WebGL, point volumes, large data</p><span class="mono">Remote · EU</span><span class="go"><svg viewBox="0 0 16 16"><path d="M4 12 12 4M6 4h6v6"/></svg></span></a>
+        <a class="rowl rv" href="#"><span class="mono">05</span><h3>Field technician</h3><p>Array logistics, crew of four</p><span class="mono">Pilbara · rotation</span><span class="go"><svg viewBox="0 0 16 16"><path d="M4 12 12 4M6 4h6v6"/></svg></span></a>
+        <a class="rowl rv" href="#"><span class="mono">06</span><h3>Partner geologist</h3><p>Turn volumes into drill decisions</p><span class="mono">Remote · Americas</span><span class="go"><svg viewBox="0 0 16 16"><path d="M4 12 12 4M6 4h6v6"/></svg></span></a>
+      </div>
+    </div>
+  </section>
+
+  <!-- CTA -->
+  <section class="cta">
+    <canvas data-viz="rings"></canvas>
+    <div class="wrap">
+      <span class="kicker mono rv"><i></i>Founding field team</span>
+      <h2 class="h2 split">Work with the people<br>who built it.</h2>
+      <p class="lead rv">Every early‑access survey is run by the founding field team.</p>
+      <div class="ctas rv">
+        <a class="btn" href="access.html"><span>Get early access</span><i class="btn__ic"><svg viewBox="0 0 16 16"><path d="M4 12 12 4M6 4h6v6"/></svg></i></a>
+        <a class="link mono" href="contacts.html">Talk to us first ↗</a>
+      </div>
+    </div>
+  </section>
+</main>
+<footer class="ftr"></footer>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+<script type="module">
+import { boot } from './site.js';
+const { ScrollTrigger, REDUCED } = boot();
+
+/* manifesto words */
+const say = document.getElementById('say');
+say.innerHTML = say.innerHTML.replace(/(<span class="hl">.*?<\/span>)|([^\s<]+)/g, (m, hl) => hl ? hl.replace('class="hl"', 'class="w hl"') : `<span class="w">${m}</span>`);
+const words = [...say.querySelectorAll('.w')];
+ScrollTrigger.create({ trigger: say, start: 'top 80%', end: 'bottom 40%', onUpdate: st => words.forEach((w, i) => w.classList.toggle('on', i / words.length < st.progress * 1.05)) });
+if (REDUCED) words.forEach(w => w.classList.add('on'));
+
+/* core drills down with the story */
+const core = document.getElementById('core'), yr = document.getElementById('coreYr');
+const years = [[0, '2019'], [.24, '2021'], [.46, '2023'], [.68, '2025'], [.9, '2027']];
+ScrollTrigger.create({ trigger: '.mils', start: 'top 60%', end: 'bottom 70%', onUpdate: st => {
+  const p = .04 + st.progress * .9;
+  core.__viz?.setProgress?.(p);
+  yr.textContent = (years.filter(y => p >= y[0]).pop() || years[0])[1] + ' · ' + (p * 5).toFixed(2) + ' km';
+} });
+
+/* local office clocks */
+const clocks = [...document.querySelectorAll('.clk')];
+const tick = () => clocks.forEach(c => { try { c.textContent = new Intl.DateTimeFormat('en-GB', { hour: '2-digit', minute: '2-digit', timeZone: c.dataset.tz }).format(new Date()); } catch { } });
+tick(); setInterval(tick, 20000);
+</script>
+</body>
+</html>

@@ -1,0 +1,391 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Solutions — Deepfield</title>
+<meta name="description" content="Exploration teams, geothermal developers, storage operators and tunnel engineers use one DF‑7 survey to decide where to drill, build or walk away." />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@200;300;400&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="site.css" />
+<script type="importmap">
+{ "imports": {
+  "three": "https://cdn.jsdelivr.net/npm/three@0.169.0/build/three.module.js",
+  "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.169.0/examples/jsm/",
+  "lenis": "https://cdn.jsdelivr.net/npm/lenis@1.1.13/dist/lenis.mjs",
+  "simplex-noise": "https://cdn.jsdelivr.net/npm/simplex-noise@4.0.3/+esm",
+  "d3-contour": "https://cdn.jsdelivr.net/npm/d3-contour@4.0.2/+esm",
+  "d3-geo": "https://cdn.jsdelivr.net/npm/d3-geo@3.1.1/+esm"
+} }
+</script>
+<style>
+/* hero */
+.hero { min-height: 100svh; position: relative; overflow: hidden; display: flex; flex-direction: column; justify-content: flex-end; padding-bottom: clamp(28px, 4vw, 56px); }
+.hero__map { position: absolute; top: 0; right: 0; width: 72vw; height: 100%; }
+.hero__map canvas { width: 100%; height: 100%; }
+.hero::before { content: ''; position: absolute; inset: 0; z-index: 1; pointer-events: none; background: linear-gradient(90deg, var(--bg) 22%, rgba(4,5,6,.7) 44%, rgba(4,5,6,.1) 70%), linear-gradient(0deg, var(--bg) 4%, transparent 40%), linear-gradient(180deg, var(--bg), transparent 20%); }
+.hero > .wrap { position: relative; z-index: 2; width: 100%; }
+.hero h1 { margin: 26px 0 28px; }
+.hero .lead { margin-bottom: 38px; }
+.sectors { display: flex; flex-wrap: wrap; gap: 8px; margin-top: clamp(48px, 7vw, 96px); padding-top: 18px; border-top: 1px solid var(--line); }
+@media (max-width: 1000px) { .hero__map { width: 150vw; right: -40vw; opacity: .7; } .hero::before { background: linear-gradient(0deg, var(--bg) 45%, rgba(4,5,6,.5) 70%, transparent); } }
+
+/* use-case story */
+.story { height: 640vh; }
+.ustep .metric { display: flex; align-items: baseline; gap: 14px; margin-top: 22px; padding-top: 18px; border-top: 1px solid var(--line); }
+.ustep .metric b { font-size: clamp(34px, 3.2vw, 52px); font-weight: 200; letter-spacing: -.04em; line-height: 1; color: var(--fg); }
+.ustep .metric span { color: var(--mut); font-size: 13.5px; max-width: 22ch; }
+.story__steps { height: 330px; }
+@media (min-width: 1001px) { #uses .story__rail { top: clamp(96px, 13vh, 140px); right: calc(var(--side) + 70px); transform: none; display: flex; gap: 26px; } }
+#uses .rnode { height: auto; grid-template-columns: 13px auto; justify-items: start; }
+#uses .rnode::after { display: none; }
+#uses .rnode i { grid-column: 1; grid-row: 1; }
+.ucolor { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 8px; vertical-align: 1px; }
+
+/* stakes */
+.stakes { display: grid; grid-template-columns: 5fr 7fr; gap: clamp(32px, 5vw, 90px); align-items: center; }
+.stakes .win canvas { aspect-ratio: 16 / 9.5; }
+.stakes__foot { display: flex; gap: 28px; flex-wrap: wrap; margin-top: 30px; color: var(--mut); }
+.stakes__foot b { color: var(--fg); font-weight: 300; font-size: 22px; letter-spacing: -.02em; margin-right: 8px; }
+@media (max-width: 900px) { .stakes { grid-template-columns: 1fr; } }
+
+/* project flow — pinned horizontal track */
+.flow { position: relative; overflow: hidden; }
+.flow__in { min-height: 100vh; display: flex; flex-direction: column; justify-content: center; padding: 96px 0 48px; }
+.flow__in > .wrap { width: 100%; }
+.flow__top { display: flex; justify-content: space-between; align-items: end; gap: 30px; flex-wrap: wrap; }
+.flow__day { text-align: right; }
+.flow__day .num { color: var(--fg); }
+.flow__day .mono { color: var(--dim); display: block; margin-bottom: 10px; }
+.track { display: flex; gap: clamp(18px, 2vw, 28px); margin-top: clamp(40px, 5vw, 64px); padding: 0 var(--side); will-change: transform; }
+.mile { flex: none; width: min(380px, 78vw); position: relative; }
+.mile__vis { position: relative; aspect-ratio: 16 / 11; border-radius: var(--r-s); overflow: hidden; background: var(--bg2); border: 1px solid var(--line2); }
+.mile__vis canvas { width: 100%; height: 100%; }
+.mile__vis .doc { position: absolute; inset: 18px; padding: 22px; border-radius: 10px; background: #0e0f11; border: 1px solid var(--line); display: grid; gap: 10px; align-content: start; }
+.doc .mono { color: var(--dim); }
+.doc .ln { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid var(--line); font-size: 13px; color: var(--mut); }
+.doc .ln b { color: var(--fg); font-weight: 400; }
+.doc .tot { display: flex; justify-content: space-between; align-items: baseline; margin-top: 6px; }
+.doc .tot b { font-size: 26px; font-weight: 200; letter-spacing: -.03em; }
+.doc .stamp { justify-self: start; margin-top: 6px; }
+.mile__dot { position: relative; height: 34px; margin-top: 22px; }
+.mile__dot::before { content: ''; position: absolute; left: 0; right: calc(-1 * clamp(18px, 2vw, 28px)); top: 16px; height: 1px; background: var(--line2); }
+.mile:last-child .mile__dot::before { right: 0; }
+.mile__dot i { position: absolute; left: 0; top: 10px; width: 13px; height: 13px; border-radius: 50%; border: 1px solid var(--line2); background: var(--bg); transition: border-color .5s, box-shadow .5s; }
+.mile.on .mile__dot i { border-color: var(--acc); box-shadow: 0 0 14px rgba(255,90,31,.55); }
+.mile.on .mile__dot i::after { content: ''; position: absolute; inset: 3px; border-radius: 50%; background: var(--acc); }
+.mile .mono.d { color: var(--acc); }
+.mile h3 { font-size: 22px; font-weight: 300; letter-spacing: -.02em; margin: 10px 0 8px; }
+.mile p { color: var(--mut); font-size: 14px; max-width: 34ch; }
+.flow__bar { margin: 34px var(--side) 0; height: 1px; background: var(--line); }
+.flow__bar i { display: block; height: 100%; width: 0; background: var(--acc); }
+.agree { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 30px; }
+@media (max-width: 900px) { .track { flex-direction: column; transform: none !important; } .mile { width: 100%; } .mile__dot { display: none; } .flow__bar { display: none; } .flow__day { display: none; } }
+
+/* deliverables */
+.deliv__head { display: flex; justify-content: space-between; align-items: end; gap: 30px; flex-wrap: wrap; margin-bottom: 34px; }
+.viewer { display: grid; grid-template-columns: 220px 1fr; min-height: 520px; }
+.viewer aside { border-right: 1px solid var(--line); padding: 18px; display: grid; gap: 6px; align-content: start; }
+.viewer aside .mono { color: var(--dim); margin: 8px 0 6px; }
+.lay { display: flex; align-items: center; justify-content: space-between; padding: 9px 12px; border-radius: 10px; color: var(--mut); font-size: 13px; }
+.lay i { width: 26px; height: 15px; border-radius: 9px; background: var(--line2); position: relative; }
+.lay i::after { content: ''; position: absolute; left: 2px; top: 2px; width: 11px; height: 11px; border-radius: 50%; background: var(--dim); transition: transform .3s; }
+.lay.on { color: var(--fg); background: rgba(236,235,230,.04); }
+.lay.on i { background: var(--acc-soft); }
+.lay.on i::after { transform: translateX(11px); background: var(--acc); }
+.viewer .stage { position: relative; }
+.viewer .stage canvas { width: 100%; height: 100%; position: absolute; inset: 0; }
+.report { display: grid; grid-template-columns: 1fr 1fr; gap: 0; min-height: 520px; }
+.report .page { padding: clamp(24px, 3vw, 44px); border-right: 1px solid var(--line); display: grid; gap: 18px; align-content: start; }
+.report .page:last-child { border-right: 0; }
+.report h4 { font-size: 26px; font-weight: 200; letter-spacing: -.03em; }
+.report table { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+.report th, .report td { text-align: left; padding: 10px 6px; border-bottom: 1px solid var(--line); }
+.report th { font: 400 10px var(--mono); letter-spacing: .07em; text-transform: uppercase; color: var(--dim); }
+.report td:first-child { color: var(--acc); font-family: var(--mono); font-size: 12px; }
+.report .sig { display: flex; justify-content: space-between; color: var(--dim); padding-top: 14px; border-top: 1px solid var(--line); }
+.report .mini { aspect-ratio: 16/10; border-radius: 10px; overflow: hidden; border: 1px solid var(--line); }
+.report .mini canvas { width: 100%; height: 100%; }
+.code { margin: 0; padding: clamp(22px, 3vw, 40px); font: 400 13px/1.75 var(--mono); color: var(--mut); overflow-x: auto; min-height: 520px; }
+.code .k { color: var(--acc); } .code .s { color: #c9c3b6; } .code .c { color: var(--dim); } .code .n { color: var(--cool); }
+@media (max-width: 900px) { .viewer, .report { grid-template-columns: 1fr; } .viewer aside { display: none; } .viewer .stage { min-height: 300px; } .report .page { border-right: 0; border-bottom: 1px solid var(--line); } }
+
+/* results */
+.res { display: grid; grid-template-columns: 2.2fr 3fr 1.6fr 46px; gap: var(--gut); align-items: center; padding: 34px 0; border-bottom: 1px solid var(--line); position: relative; transition: padding .5s var(--ease); }
+.res:first-child { border-top: 1px solid var(--line); }
+.res .num { font-size: clamp(44px, 4.6vw, 72px); }
+.res h3 { font-size: clamp(19px, 1.6vw, 24px); font-weight: 300; letter-spacing: -.02em; }
+.res p { color: var(--mut); font-size: 14px; margin-top: 8px; }
+.res .meta { display: grid; gap: 8px; color: var(--dim); }
+.res .go { width: 46px; height: 46px; border-radius: 50%; border: 1px solid var(--line2); display: grid; place-items: center; transition: background .4s, transform .5s var(--ease), border-color .4s, color .4s; }
+.res .go svg { width: 14px; height: 14px; fill: none; stroke: currentColor; stroke-width: 1.4; }
+a.res:hover { padding-left: 14px; }
+a.res:hover .go { background: var(--acc); border-color: var(--acc); color: #000; transform: rotate(45deg); }
+@media (max-width: 900px) { .res { grid-template-columns: 1fr 46px; } .res > div:nth-child(2), .res > div:nth-child(3) { grid-column: 1; } .res .go { grid-row: 1; grid-column: 2; } }
+</style>
+</head>
+<body>
+<main>
+
+  <!-- ================= HERO ================= -->
+  <section class="hero" id="top">
+    <div class="hero__map"><canvas data-viz="targets" aria-label="Plan view of a target horizon with three ranked drilling targets"></canvas></div>
+    <div class="wrap">
+      <span class="kicker mono rv"><i></i>Solutions <b>/</b> for mining, energy and infrastructure</span>
+      <h1 class="h1 split">Know what's under<br>the site before the<br>first borehole.</h1>
+      <p class="lead rv" data-d="2">Exploration teams, geothermal developers, storage operators and tunnel engineers use one DF‑7 survey to decide where to drill, build or walk away.</p>
+      <div class="ctas rv" data-d="3">
+        <a class="btn" href="access.html"><span>Get early access</span><i class="btn__ic"><svg viewBox="0 0 16 16"><path d="M4 12 12 4M6 4h6v6"/></svg></i></a>
+        <a class="link mono" href="#uses">See the five use cases ↓</a>
+      </div>
+      <div class="sectors rv" data-d="4">
+        <span class="chip mono"><i></i>Mineral exploration</span><span class="chip mono"><i style="background:#ff6a33"></i>Geothermal</span><span class="chip mono"><i style="background:var(--cool)"></i>Carbon storage</span><span class="chip mono"><i style="background:var(--fg)"></i>Tunnels &amp; foundations</span><span class="chip mono"><i style="background:#ff4d0f"></i>Geohazard screening</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= USE CASES (scroll story, one block of ground) ================= -->
+  <section class="story" id="uses">
+    <div class="story__stick">
+      <div class="story__gl"><canvas id="usesGl" aria-label="3D block of ground; each use case highlights a different feature in it"></canvas></div>
+      <div class="story__ui">
+        <div class="story__head">
+          <span class="kicker mono"><i></i>One survey, five questions</span>
+          <h2 class="h2">Same ground.<br>Different question.</h2>
+        </div>
+        <div class="story__steps">
+          <div class="sstep ustep on" data-i="0"><span class="mono">01 / 05 · Mineral exploration</span><h3 class="h3">Where is the ore body, how deep, how big?</h3><p>Dense bodies show up as high‑velocity anomalies. Targets are ranked by size and confidence before the first hole.</p><div class="metric"><b data-ph>−60%</b><span>exploration metres in the Atacama trial</span></div></div>
+          <div class="sstep ustep" data-i="1"><span class="mono">02 / 05 · Geothermal</span><h3 class="h3">Where does the heat actually move?</h3><p>Fracture zones along faults carry hot fluid. We map them in 3D so wells cut through them instead of missing them.</p><div class="metric"><b data-ph>2 of 3</b><span>producing wells sited from a DF‑7 model</span></div></div>
+          <div class="sstep ustep" data-i="2"><span class="mono">03 / 05 · Carbon storage</span><h3 class="h3">Will the reservoir hold?</h3><p>You see the porous reservoir and the continuity of the seal above it, before a single tonne of CO₂ is injected.</p><div class="metric"><b data-ph>6 wks</b><span>to a seal‑integrity answer, not nine months</span></div></div>
+          <div class="sstep ustep" data-i="3"><span class="mono">04 / 05 · Tunnels &amp; foundations</span><h3 class="h3">What will the boring machine hit?</h3><p>You get a continuous profile of the whole route, with faults, voids and water‑bearing zones, not borehole logs every 500 m.</p><div class="metric"><b data-ph>14 km</b><span>of route profiled in one 9‑day survey</span></div></div>
+          <div class="sstep ustep" data-i="4"><span class="mono">05 / 05 · Geohazard screening</span><h3 class="h3">Is there an active fault under the site?</h3><p>We trace fault planes and weak strata beneath dams, plants and new towns, so the risk is priced in from the start.</p><div class="metric"><b data-ph>3.2 km</b><span>fault plane traced under a planned dam</span></div></div>
+        </div>
+        <div class="story__rail mono">
+          <div class="rnode on"><span>Mining</span><i></i></div>
+          <div class="rnode"><span>Geothermal</span><i></i></div>
+          <div class="rnode"><span>CO₂ storage</span><i></i></div>
+          <div class="rnode"><span>Tunnels</span><i></i></div>
+          <div class="rnode"><span>Hazards</span><i></i></div>
+        </div>
+        <div class="story__prog"><i id="usesBar"></i></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= STAKES ================= -->
+  <section class="sp2" id="stakes">
+    <div class="wrap stakes">
+      <div>
+        <span class="kicker mono rv"><i></i>The cost of guessing</span>
+        <p class="bigsay" id="say" style="margin-top:26px">A dry exploration hole costs <span class="hl">$1–3&nbsp;M.</span> Most of them were drilled on a map made from the surface.</p>
+        <div class="stakes__foot rv"><span><b data-ph>7 / 10</b>greenfield programmes never find an economic deposit</span></div>
+      </div>
+      <div class="win rv" data-d="1">
+        <div class="win__bar mono"><span class="dots"><i></i><i></i><i></i></span><span class="t">Same section · two ways to drill it</span><span class="r"><span class="live">Simulated</span></span></div>
+        <canvas data-viz="holes"></canvas>
+        <div class="win__foot mono"><span>Grid: <b>24 holes</b></span><span>From a model: <b>4 holes</b></span><span style="color:var(--acc)">Same ore body</span></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= PROJECT FLOW (pinned) ================= -->
+  <section class="flow sp2" id="flow">
+    <div class="flow__in">
+      <div class="wrap flow__top">
+        <div>
+          <span class="kicker mono rv"><i></i>How a project runs</span>
+          <h2 class="h2 split" style="margin-top:22px">From coordinates<br>to a model in 36 days.</h2>
+        </div>
+        <div class="flow__day"><span class="mono">Project day</span><b class="num" id="dayN">0</b></div>
+      </div>
+      <div class="track" id="track">
+        <article class="mile on" data-day="0">
+          <div class="mile__vis"><canvas data-viz="area"></canvas></div>
+          <div class="mile__dot"><i></i></div>
+          <span class="mono d">Day 0</span><h3>Send your area</h3><p>A polygon or a single coordinate, plus a target depth. That's all we need to start.</p>
+        </article>
+        <article class="mile" data-day="5">
+          <div class="mile__vis"><div class="doc">
+            <span class="mono">Survey plan · ATC‑03 · fixed quote</span>
+            <div class="ln"><span>Array</span><b>DF‑7 · 81 sensors · 3 rings</b></div>
+            <div class="ln"><span>Area / depth</span><b>120 km² · 3 km</b></div>
+            <div class="ln"><span>Mobilisation</span><b>Day 8</b></div>
+            <div class="ln"><span>Fieldwork</span><b>7 days</b></div>
+            <div class="tot"><span class="mono">Fixed price</span><b data-ph>$480,000</b></div>
+            <span class="chip mono stamp"><i></i>No change orders</span>
+          </div></div>
+          <div class="mile__dot"><i></i></div>
+          <span class="mono d">Day 5</span><h3>Get a plan and a fixed price</h3><p>Dates, crew, array layout and one number. The price doesn't move once we mobilise.</p>
+        </article>
+        <article class="mile" data-day="8">
+          <div class="mile__vis"><canvas data-viz="footprint"></canvas></div>
+          <div class="mile__dot"><i></i></div>
+          <span class="mono d">Day 8 – 15</span><h3>We survey</h3><p>A crew of four deploys the array. You can be on site or follow every shot live.</p>
+        </article>
+        <article class="mile" data-day="18">
+          <div class="mile__vis"><canvas data-viz="section" data-o='{"still":true,"duration":3}'></canvas></div>
+          <div class="mile__dot"><i></i></div>
+          <span class="mono d">Day 18</span><h3>First volume</h3><p>Three days after the last shot, your geologists have the classified volume.</p>
+        </article>
+        <article class="mile" data-day="36">
+          <div class="mile__vis"><canvas data-viz="targets" data-o='{"legend":false,"seed":23}'></canvas></div>
+          <div class="mile__dot"><i></i></div>
+          <span class="mono d">Day 36</span><h3>Decide</h3><p>A signed report with ranked targets and drill traces, plus a review call with our geophysicist.</p>
+        </article>
+      </div>
+      <div class="flow__bar"><i id="flowBar"></i></div>
+    </div>
+  </section>
+
+  <!-- ================= DELIVERABLES ================= -->
+  <section class="sp2" id="deliverables">
+    <div class="wrap">
+      <div class="deliv__head">
+        <div>
+          <span class="kicker mono rv"><i></i>What you receive</span>
+          <h2 class="h2 split" style="margin-top:22px">Data your geologists<br>can use on day one.</h2>
+        </div>
+        <div class="tabs mono rv" role="tablist" aria-label="Deliverables">
+          <button role="tab" aria-selected="true" aria-controls="p1" id="t1">3D volume</button>
+          <button role="tab" aria-selected="false" aria-controls="p2" id="t2">Signed report</button>
+          <button role="tab" aria-selected="false" aria-controls="p3" id="t3">Viewer &amp; API</button>
+        </div>
+      </div>
+
+      <div class="win rv">
+        <div class="win__bar mono"><span class="dots"><i></i><i></i><i></i></span><span class="t" id="winT">viewer.deepfield.io / ATC‑03 / volume</span><span class="r">SEG‑Y · LAS · LAZ</span></div>
+        <div class="pane viewer" id="p1" role="tabpanel" aria-labelledby="t1">
+          <aside>
+            <span class="mono">Layers</span>
+            <button class="lay on" data-l="h">Horizons<i></i></button>
+            <button class="lay on" data-l="f">Faults<i></i></button>
+            <button class="lay on" data-l="o">Ore bodies<i></i></button>
+            <button class="lay" data-l="v">Velocity only<i></i></button>
+            <span class="mono">Readout</span>
+            <div class="lay">Vp<b class="mono" style="color:var(--fg)">6.4 km/s</b></div>
+            <div class="lay">Depth<b class="mono" style="color:var(--fg)">1.9 km</b></div>
+            <div class="lay">Class<b class="mono" style="color:var(--acc)">Cu‑porphyry</b></div>
+          </aside>
+          <div class="stage"><canvas data-viz="section" data-o='{"still":true,"duration":4}'></canvas></div>
+        </div>
+        <div class="pane report" id="p2" role="tabpanel" aria-labelledby="t2" hidden>
+          <div class="page">
+            <span class="mono dim">Survey report · ATC‑03 · rev 2</span>
+            <h4>Three targets, ranked by size and confidence.</h4>
+            <table><thead><tr><th>ID</th><th>Top</th><th>Volume</th><th>Confidence</th></tr></thead>
+              <tbody><tr><td>T1</td><td>1.9 km</td><td data-ph>0.42 km³</td><td>92%</td></tr><tr><td>T2</td><td>2.3 km</td><td data-ph>0.18 km³</td><td>78%</td></tr><tr><td>T3</td><td>2.8 km</td><td data-ph>0.07 km³</td><td>61%</td></tr></tbody></table>
+            <p class="body" style="font-size:14px">Recommended: two holes into T1 from the north‑east pad, one into T2. Expected intercept depths are shown on page 14.</p>
+            <div class="sig mono"><span>Signed · <span data-ph>P.Geo, licence 00000</span></span><span>24 pp</span></div>
+          </div>
+          <div class="page"><div class="mini"><canvas data-viz="targets" data-o='{"seed":17}'></canvas></div><span class="mono dim">Fig. 6 · Depth to target horizon with ranked targets</span></div>
+        </div>
+        <div class="pane" id="p3" role="tabpanel" aria-labelledby="t3" hidden>
+<pre class="code"><span class="c"># Pull ranked targets into your GIS</span>
+<span class="k">curl</span> https://api.deepfield.io/v1/surveys/<span class="s">ATC-03</span>/targets \
+  -H <span class="s">"Authorization: Bearer $DEEPFIELD_TOKEN"</span>
+
+<span class="c"># → 200 OK</span>
+{
+  <span class="s">"survey"</span>: <span class="s">"ATC-03"</span>,
+  <span class="s">"crs"</span>: <span class="s">"EPSG:32719"</span>,
+  <span class="s">"targets"</span>: [
+    { <span class="s">"id"</span>: <span class="s">"T1"</span>, <span class="s">"top_m"</span>: <span class="n">1910</span>, <span class="s">"vp_kms"</span>: <span class="n">6.4</span>, <span class="s">"confidence"</span>: <span class="n">0.92</span> },
+    { <span class="s">"id"</span>: <span class="s">"T2"</span>, <span class="s">"top_m"</span>: <span class="n">2290</span>, <span class="s">"vp_kms"</span>: <span class="n">6.1</span>, <span class="s">"confidence"</span>: <span class="n">0.78</span> }
+  ],
+  <span class="s">"volume"</span>: <span class="s">"s3://…/ATC-03/volume.laz"</span>
+}</pre>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= RESULTS ================= -->
+  <section class="sp2" id="results">
+    <div class="wrap">
+      <div class="shead">
+        <span class="shead__idx mono">Results</span>
+        <h2 class="shead__t h2 split">What teams did<br>with their volume.</h2>
+        <a class="shead__p link mono rv" href="technology.html#trials">All field trials ↗</a>
+      </div>
+      <div>
+        <a class="res rv" href="#"><b class="num" data-ph>−60%</b><div><h3>Cut exploration drilling and hit on hole two</h3><p>120 km² copper concession, three ranked targets.</p></div><div class="meta mono"><span>Mid‑tier miner</span><span>Chile · 2023</span></div><span class="go"><svg viewBox="0 0 16 16"><path d="M4 12 12 4M6 4h6v6"/></svg></span></a>
+        <a class="res rv" href="#"><b class="num" data-ph>2/3</b><div><h3>Producing wells sited from a fracture model</h3><p>Fracture zones to 3.2 km in volcanic rock.</p></div><div class="meta mono"><span>Utility developer</span><span>Iceland · 2026</span></div><span class="go"><svg viewBox="0 0 16 16"><path d="M4 12 12 4M6 4h6v6"/></svg></span></a>
+        <a class="res rv" href="#"><b class="num" data-ph>6 wks</b><div><h3>Seal integrity confirmed before injection</h3><p>Offshore survey at 140 m of water.</p></div><div class="meta mono"><span>Storage operator</span><span>North Sea · 2025</span></div><span class="go"><svg viewBox="0 0 16 16"><path d="M4 12 12 4M6 4h6v6"/></svg></span></a>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= CTA ================= -->
+  <section class="cta">
+    <canvas data-viz="rings"></canvas>
+    <div class="wrap">
+      <span class="kicker mono rv"><i></i>Takes three minutes</span>
+      <h2 class="h2 split">Tell us the site.<br>We'll tell you if DF‑7 can read it.</h2>
+      <p class="lead rv">We reply within two business days, including when the answer is no.</p>
+      <div class="agree rv" style="justify-content:center;margin:-10px 0 36px"><span class="chip mono"><i></i>Fixed price before mobilisation</span><span class="chip mono"><i></i>You own the data</span><span class="chip mono"><i></i>Re‑shoot at our cost if quality fails</span></div>
+      <div class="ctas rv">
+        <a class="btn" href="access.html"><span>Get early access</span><i class="btn__ic"><svg viewBox="0 0 16 16"><path d="M4 12 12 4M6 4h6v6"/></svg></i></a>
+        <a class="link mono" href="simulator.html">Run a simulated survey ↗</a>
+      </div>
+    </div>
+  </section>
+</main>
+<footer class="ftr"></footer>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+<script type="module">
+import { boot } from './site.js';
+import { Subsurface } from './viz3d.js';
+const { gsap, ScrollTrigger, REDUCED } = boot();
+
+/* use cases: one block, five highlights */
+const stick = document.querySelector('#uses .story__stick');
+const scene = new Subsurface(document.getElementById('usesGl'), { mode: 'uses' }); window.__uses = scene;
+new IntersectionObserver(([e]) => e.isIntersecting ? scene.start() : scene.stop(), { rootMargin: '100px' }).observe(stick);
+const steps = [...document.querySelectorAll('#uses .sstep')], nodes = [...document.querySelectorAll('#uses .rnode')], bar = document.getElementById('usesBar');
+let cur = -1;
+const setUse = i => { if (i === cur) return; cur = i; scene.setUse(i); steps.forEach((s, k) => s.classList.toggle('on', k === i)); nodes.forEach((n, k) => n.classList.toggle('on', k <= i)); };
+setUse(0);
+ScrollTrigger.create({ trigger: '#uses', start: 'top top', end: 'bottom bottom', onUpdate: st => { bar.style.width = st.progress * 100 + '%'; setUse(Math.min(4, Math.floor(st.progress * 5.1))); } });
+
+/* stakes: words light up as you read */
+const say = document.getElementById('say');
+say.innerHTML = say.innerHTML.replace(/(<span class="hl">.*?<\/span>)|([^\s<]+)/g, (m, hl) => hl ? hl.replace('class="hl"', 'class="w hl"') : `<span class="w">${m}</span>`);
+const words = [...say.querySelectorAll('.w')];
+ScrollTrigger.create({ trigger: say, start: 'top 80%', end: 'bottom 45%', onUpdate: st => words.forEach((w, i) => w.classList.toggle('on', i / words.length < st.progress * 1.05)) });
+if (REDUCED) words.forEach(w => w.classList.add('on'));
+
+/* project flow: pin and slide on desktop */
+const track = document.getElementById('track'), miles = [...track.children], dayN = document.getElementById('dayN'), fbar = document.getElementById('flowBar');
+const mm = gsap.matchMedia();
+mm.add('(min-width: 901px)', () => {
+  const dist = () => Math.max(0, track.scrollWidth - innerWidth + 40);
+  const tw = gsap.to(track, { x: () => -dist(), ease: 'none', scrollTrigger: { trigger: '#flow', start: 'top top', end: () => '+=' + dist() * 1.3, pin: true, scrub: .6, invalidateOnRefresh: true,
+    onUpdate: st => { const p = st.progress; fbar.style.width = p * 100 + '%'; const day = Math.round(p * 36); dayN.textContent = day; miles.forEach(m => m.classList.toggle('on', +m.dataset.day <= day)); } } });
+  return () => tw.kill();
+});
+
+/* deliverables tabs */
+const tabs = [...document.querySelectorAll('[role="tab"]')], winT = document.getElementById('winT');
+const titles = { t1: 'viewer.deepfield.io / ATC‑03 / volume', t2: 'ATC‑03 · survey report · signed PDF', t3: 'api.deepfield.io / v1' };
+tabs.forEach(b => b.addEventListener('click', () => {
+  tabs.forEach(x => { const on = x === b; x.setAttribute('aria-selected', on); document.getElementById(x.getAttribute('aria-controls')).hidden = !on; });
+  winT.textContent = titles[b.id];
+  window.dispatchEvent(new Event('resize'));
+}));
+// layer toggles drive the section overlays
+const lays = [...document.querySelectorAll('.lay[data-l]')], vcan = document.querySelector('#p1 canvas');
+lays.forEach(b => { b.setAttribute('aria-pressed', b.classList.contains('on')); b.addEventListener('click', () => {
+  const on = b.classList.toggle('on');
+  if (b.dataset.l === 'v' && on) lays.forEach(x => x !== b && x.classList.remove('on'));
+  if (b.dataset.l !== 'v' && on) lays.find(x => x.dataset.l === 'v').classList.remove('on');
+  const st = k => lays.find(x => x.dataset.l === k).classList.contains('on');
+  lays.forEach(x => x.setAttribute('aria-pressed', x.classList.contains('on')));
+  vcan.__layers = { h: st('h'), f: st('f'), o: st('o') };
+  vcan.__viz?._draw?.();
+}); });
+</script>
+</body>
+</html>

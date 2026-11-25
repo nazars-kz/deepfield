@@ -1,0 +1,240 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Deepfield — Subsurface Intelligence</title>
+  <meta name="description" content="Deepfield builds acoustic tomography arrays that turn seismic echoes into volumetric 3D maps of the underground." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Sora:wght@200;300;400&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+  <script type="importmap">
+    {
+      "imports": {
+        "three": "https://cdn.jsdelivr.net/npm/three@0.169.0/build/three.module.js",
+        "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.169.0/examples/jsm/",
+        "lenis": "https://cdn.jsdelivr.net/npm/lenis@1.1.13/dist/lenis.mjs"
+      }
+    }
+  </script>
+</head>
+<body class="is-loading">
+
+  <!-- Loader -->
+  <div class="loader" id="loader">
+    <svg class="loader__ring" viewBox="0 0 120 120" aria-hidden="true">
+      <circle cx="60" cy="60" r="54" class="trk" />
+      <circle cx="60" cy="60" r="54" class="bar" id="loaderArc" />
+    </svg>
+    <div class="loader__txt">
+      <span class="num" id="loaderPct">000</span>
+      <span class="mono" id="loaderTxt">Calibrating array</span>
+    </div>
+  </div>
+
+  <canvas id="gl"></canvas>
+
+  <!-- HUD -->
+  <div class="hud" aria-hidden="true">
+    <div class="hud__depth">
+      <div class="hud__line"></div>
+      <div class="hud__ticks" id="depthScale"></div>
+      <div class="hud__marker" id="depthMarker"><i></i><span class="mono" id="depthVal">0 m</span></div>
+    </div>
+    <div class="hud__bl mono">
+      <span id="coordRead">47.8412° N · 35.1384° E</span>
+      <span class="hud__cam" id="camRead">θ 000.0 · φ 00.0 · R 00.0</span>
+    </div>
+    <div class="hud__br">
+      <span class="mono hud__name" id="secName">Planet</span>
+      <div class="hud__ring">
+        <svg viewBox="0 0 48 48"><circle cx="24" cy="24" r="21" class="trk" /><circle cx="24" cy="24" r="21" class="bar" id="progArc" /></svg>
+        <span class="mono" id="secIdx">01</span>
+      </div>
+    </div>
+  </div>
+
+  <header class="nav">
+    <a class="logo" href="#hero">
+      <svg viewBox="0 0 28 28" width="26" height="26" aria-hidden="true">
+        <circle cx="14" cy="14" r="12.5" fill="none" stroke="currentColor" stroke-width="1" opacity=".35"/>
+        <circle cx="14" cy="14" r="8" fill="none" stroke="currentColor" stroke-width="1" opacity=".6"/>
+        <circle cx="14" cy="14" r="3.4" fill="none" stroke="currentColor" stroke-width="1"/>
+        <circle cx="14" cy="14" r="1.3" fill="#ff5a1f"/>
+      </svg>
+      <span>deepfield</span>
+    </a>
+    <nav class="nav__pill mono">
+      <a href="technology.html">Technology</a>
+      <a href="solutions.html">Solutions</a>
+      <a href="company.html">Company</a>
+      <a href="contacts.html">Contacts</a>
+      <a href="simulator.html" class="nav__sim">Simulator ↗</a>
+    </nav>
+    <a class="btn btn--glass" href="access.html"><span>Get early access</span><i class="btn__ic"><svg viewBox="0 0 16 16"><path d="M4 12 12 4M6 4h6v6" /></svg></i></a>
+  </header>
+
+  <main>
+    <!-- 01 PLANET -->
+    <section class="hero" id="hero">
+      <div class="sticky">
+        <div class="hero__content">
+          <div class="hero__main">
+            <p class="tag mono"><i class="dot"></i>Subsurface intelligence</p>
+            <h1 data-split>Listening to the planet, kilometres down.</h1>
+            <p class="lead" data-fade>Deepfield arrays are deployed across 40+ basins. Each one turns seismic echoes into a volumetric map of plates, strata and mineral bodies.</p>
+            <div class="hero__ctas" data-fade>
+              <a class="btn" href="#scan"><span>Enter a survey</span><i class="btn__ic"><svg viewBox="0 0 16 16"><path d="M8 3v10M3.5 8.5 8 13l4.5-4.5" /></svg></i></a>
+              <a class="link mono" href="simulator.html">Try the simulator ↗</a>
+            </div>
+          </div>
+          <ul class="sites mono" data-fade id="siteList"></ul>
+        </div>
+      </div>
+    </section>
+
+    <!-- 02 SCAN -->
+    <section class="scan" id="scan">
+      <div class="sticky">
+        <div class="scan__head">
+          <p class="tag mono"><i class="dot"></i>02 · Acquisition</p>
+          <h2 data-split>From a single pulse to a full volume.</h2>
+        </div>
+
+        <ol class="steps">
+          <li class="step is-active" data-step="0">
+            <svg class="step__ring" viewBox="0 0 28 28"><circle cx="14" cy="14" r="12" class="trk" /><circle cx="14" cy="14" r="12" class="bar" /></svg>
+            <div><span class="step__t">Emit</span><p>A broadband source fires a controlled pulse, 0.5–240 Hz. Wavefronts travel through rock at 2–7 km/s.</p></div>
+          </li>
+          <li class="step" data-step="1">
+            <svg class="step__ring" viewBox="0 0 28 28"><circle cx="14" cy="14" r="12" class="trk" /><circle cx="14" cy="14" r="12" class="bar" /></svg>
+            <div><span class="step__t">Listen</span><p>81 geophones record every echo. Each boundary between rock layers returns its own reflection signature.</p></div>
+          </li>
+          <li class="step" data-step="2">
+            <svg class="step__ring" viewBox="0 0 28 28"><circle cx="14" cy="14" r="12" class="trk" /><circle cx="14" cy="14" r="12" class="bar" /></svg>
+            <div><span class="step__t">Reconstruct</span><p>Full‑waveform inversion turns millions of arrival times into a classified 3D point volume.</p></div>
+          </li>
+        </ol>
+
+        <aside class="panel seis interactive">
+          <div class="panel__head mono"><span>Live gather</span><span class="rec"><i></i>CH 01–14</span></div>
+          <canvas id="seis"></canvas>
+          <div class="readouts mono">
+            <div><span>Wavefront</span><b id="roDepth">0 m</b></div>
+            <div><span>Reflectors</span><b id="roRefl">0 / 6</b></div>
+            <div><span>SNR</span><b id="roSnr">— dB</b></div>
+            <div><span>Points</span><b id="roPts">0</b></div>
+          </div>
+        </aside>
+      </div>
+    </section>
+
+    <!-- 03 MODEL -->
+    <section class="model" id="model">
+      <div class="sticky">
+        <aside class="panel model__panel interactive">
+          <p class="tag mono"><i class="dot"></i>03 · Model</p>
+          <h2 data-split>A readable map of the underground.</h2>
+          <p class="body">Every point carries velocity, density and lithology. Separate strata, trace plate boundaries, isolate anomalies.</p>
+          <div class="seg mono" role="tablist">
+            <i class="seg__pill"></i>
+            <button class="is-on" data-mode="0">Strata</button>
+            <button data-mode="1">Density</button>
+            <button data-mode="2">Deposits</button>
+            <button data-mode="3">Plates</button>
+          </div>
+          <ul class="deps" id="depList"></ul>
+        </aside>
+
+        <div class="stats">
+          <div><b data-count="38.4" data-dec="1">0</b><span class="mono">M points</span></div>
+          <div><b data-count="4930" data-dec="0">0</b><span class="mono">m depth</span></div>
+          <div><b data-count="6" data-dec="0">0</b><span class="mono">horizons</span></div>
+          <div><b data-count="5" data-dec="0">0</b><span class="mono">anomalies</span></div>
+        </div>
+        <p class="hint mono"><i></i>Drag to rotate</p>
+      </div>
+    </section>
+
+    <!-- 04 DEPTH -->
+    <section class="depth" id="depth">
+      <div class="sticky">
+        <div class="depth__head">
+          <p class="tag mono"><i class="dot"></i>04 · Section</p>
+          <h2 data-split>Five kilometres of data. A hundred and fifty of context.</h2>
+          <p class="body">Points resolve into a continuous section. Below the survey floor, the model is constrained by regional tomography — all the way to the partially molten asthenosphere.</p>
+        </div>
+        <div class="core panel">
+          <div class="panel__head mono"><span>Core log</span><span id="coreKm">0.0 km</span></div>
+          <ul class="core__list mono" id="coreList">
+            <li data-k="0"><i style="--c:#a88b62"></i><span>Sedimentary cover</span><em>0–5</em></li>
+            <li data-k="1"><i style="--c:#8f7a7c"></i><span>Upper crust</span><em>5–18</em></li>
+            <li data-k="2"><i style="--c:#56625f"></i><span>Lower crust</span><em>18–35</em></li>
+            <li data-k="3"><i style="--c:#4b5a3e"></i><span>Lithospheric mantle</span><em>35–100</em></li>
+            <li data-k="4"><i style="--c:#ff5a1f"></i><span>Asthenosphere</span><em>100+</em></li>
+          </ul>
+        </div>
+        <p class="hint hint--ore mono" id="oreHint"><i></i>Select a deposit to inspect</p>
+      </div>
+    </section>
+
+    <!-- 05 CTA -->
+    <section class="cta" id="cta">
+      <div class="cta__inner">
+        <p class="tag mono"><i class="dot"></i>05 · Survey</p>
+        <h2 data-split>Know the ground before you break it.</h2>
+        <p class="body">Deploy a DF‑7 array on site, or license existing survey volumes across 40+ basins.</p>
+        <div class="hero__ctas">
+          <a class="btn" href="access.html"><span>Get early access</span><i class="btn__ic"><svg viewBox="0 0 16 16"><path d="M4 12 12 4M6 4h6v6" /></svg></i></a>
+          <a class="link mono" href="simulator.html">Run a simulated survey ↗</a>
+        </div>
+      </div>
+      <footer class="foot mono">
+        <span>© 2026 Deepfield Systems</span>
+        <span>Acoustic tomography · FWI · Point volumes</span>
+        <span>Prototype</span>
+      </footer>
+    </section>
+  </main>
+
+  <div class="labels" id="labels"></div>
+
+  <!-- Specimen inspector -->
+  <aside class="inspect panel" id="inspect" aria-hidden="true">
+    <button class="inspect__close" id="inspectClose" aria-label="Close inspector"><svg viewBox="0 0 16 16"><path d="M4 4l8 8M12 4l-8 8" /></svg></button>
+    <p class="tag mono"><i class="dot"></i><span id="inCode">CU‑02</span><span class="tag__sep">·</span><span>Specimen</span></p>
+    <h3 id="inName">Porphyry copper</h3>
+    <p class="inspect__min mono" id="inMineral">Chalcopyrite · CuFeS₂</p>
+
+    <div class="inspect__hero">
+      <div class="inspect__gauge">
+        <svg viewBox="0 0 100 100"><circle cx="50" cy="50" r="44" class="trk" /><circle cx="50" cy="50" r="44" class="bar" id="inConfArc" /></svg>
+        <div><b id="inConf">94</b><span class="mono">% conf.</span></div>
+      </div>
+      <div class="inspect__depth">
+        <span class="mono">Depth</span>
+        <b id="inDepth">1,568 m</b>
+        <div class="inspect__bar"><i id="inDepthBar"></i></div>
+        <div class="inspect__scale mono"><span>0</span><span>2.5</span><span>5 km</span></div>
+      </div>
+    </div>
+
+    <dl class="inspect__grid">
+      <div><dt class="mono">Grade</dt><dd id="inGrade"></dd></div>
+      <div><dt class="mono">Tonnage</dt><dd id="inTon"></dd></div>
+      <div><dt class="mono">Host rock</dt><dd id="inHost"></dd></div>
+      <div><dt class="mono">Thickness</dt><dd id="inThick"></dd></div>
+      <div><dt class="mono">Extraction</dt><dd id="inMethod"></dd></div>
+      <div><dt class="mono">In‑situ value</dt><dd id="inValue"></dd></div>
+    </dl>
+    <p class="body" id="inNote"></p>
+    <p class="inspect__foot mono"><span>Drag to orbit</span><span>Esc to close</span></p>
+  </aside>
+  <div class="cursor" id="cursor"><i></i><span class="mono" id="cursorTxt"></span></div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+  <script type="module" src="main.js"></script>
+</body>
+</html>
